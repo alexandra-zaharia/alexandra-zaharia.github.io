@@ -1,7 +1,7 @@
 ---
 title: How to manually modify a .deb package
 date: 2008-06-26 00:00:00 +0100
-categories: [Linux]
+categories: [Linux, command line]
 tags: [Linux, deb]
 math: true
 ---
