@@ -24,7 +24,7 @@ typedef struct {
 
 Now, suppose we are required to write a function that will project a given segment on the horizontal (X) axis, and another one that will project the segment on the vertical (Y) axis. In most cases, the projection of a segment on either of the axes is another segment. 
 
-![the projection is a segment](/assets/img/union_projection_1.png){: width="200" class="right"}
+![the projection is a segment](/assets/img/posts/union_projection_1.png){: width="200" class="right"}
 For example, in the figure at the right we have a segment with endpoints (1, 1) and (2, 2). (It will be referred to as "the red segment" later on.) Its projections on the X and Y axes will be:
 
 * The segment with endpoints (1, 0) and (2, 0) on the horizontal axis (in pink);
@@ -36,7 +36,7 @@ However, there are two special edge cases:
 * If the segment is vertical (its *x* coordinates for both endpoints are the same), then its projection on the horizontal (X) axis is a point.
 * If the segment is horizontal (its *y* coordinates for both endpoints are the same), then its projection on the vertical (Y) axis is a point.
 
-![the projection is a point](/assets/img/union_projection_2.png){: width="200" class="right"}
+![the projection is a point](/assets/img/posts/union_projection_2.png){: width="200" class="right"}
 
 For example, in the figure at the right we have a segment with endpoints (1, 2) and (2, 2). (This segment will be referred to as "the blue segment" later on.) Its projection on the horizontal axis is another segment, but its projection on the vertical axis is the point with coordinates (0, 2). 
 

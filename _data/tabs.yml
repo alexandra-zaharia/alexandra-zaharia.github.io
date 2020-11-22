@@ -24,6 +24,11 @@
   url: archives
   icon: "fas fa-archive"
 -
+  name: "My resume"
+  icon: "fas fa-user"
+  path: tabs
+  url: resume
+-
   name: "About"
   icon: "fas fa-info"
   path: tabs
