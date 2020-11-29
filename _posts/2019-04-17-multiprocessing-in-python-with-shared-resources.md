@@ -5,11 +5,9 @@ categories: [Python, parallelism]
 tags: [Python, subprocess, multiprocessing, lock]
 ---
 
-# Principle
+## The problem 
 
-In the [previous post on parallelism in Python][pp], we have seen how an external Python script performing a long computation can be ran in parallel using Python's [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module. If you haven't done so already, take your time to read that post before this one.
-
-[pp]: {% post_url 2019-04-17-run-python-script-as-subprocess-with-multiprocessing %}
+In the [previous post on parallelism in Python][pp], we have seen how an external Python script performing a long computation can be ran in parallel using Python's [`multiprocessing`][] module. If you haven't done so already, take your time to read that post before this one.
 
 Here we elaborate on the scenario presented in the previous post:
 * As before, we have an external Python script `worker.py` that performs a long computation.
@@ -22,8 +20,6 @@ The figure below shows a shared resource (SR) in yellow, that needs to be access
 ![shared resource](/assets/img/posts/shared_resource.png)
 
 What we need to do is enable each task to access the shared resource _only if_ no other task is currently accessing it. This can be achieved by using a synchronization mechanism called a **lock**.
-
-# Practice
 
 ## The worker script
 
@@ -52,7 +48,7 @@ if __name__ == '__main__':
 
 ## The main script
 
-What we will be doing now is launching 100 processes in parallel on as many threads as we have CPUs. Each process launches `worker.py` as a Python [`subprocess`](https://docs.python.org/3/library/subprocess.html). As we have seen above, the worker script sleeps for a given number of seconds.
+What we will be doing now is launching 100 processes in parallel on as many threads as we have CPUs. Each process launches `worker.py` as a Python [`subprocess`][]. As we have seen above, the worker script sleeps for a given number of seconds.
 
 ### The shared resource
 
@@ -90,7 +86,7 @@ def update_progress_bar(_):
 
 if __name__ == '__main__':
     tasks = [str(x) for x in range(1, NUMBER_OF_TASKS + 1)]
-    pool = mp.Pool(mp.cpu_count())
+    pool = mp.Pool()
     manager = mp.Manager()
     lock = manager.Lock()
     shared_list = manager.list()
@@ -106,7 +102,7 @@ if __name__ == '__main__':
 
 ### Explanation
 
-Just like in the [previous post][pp], we define a pool of tasks that we want to parallelize. Although the aim is to eventually run 100 processes (`NUMBER_OF_TASKS` is 100, see lines 5 and 23), we cannot effectively run them all at the same time. For true parallelism, a CPU thread  should handle one process at a time. This is why we define the pool of tasks as holding as many processes as there are CPU threads, as returned by the `cpu_count()` method in `multiprocessing` (line 24).
+Just like in the [previous post][pp], we define a pool of tasks that we want to parallelize. Although the aim is to eventually run 100 processes (`NUMBER_OF_TASKS` is 100, see lines 5 and 23), we cannot effectively run them all at the same time. For true parallelism, a CPU thread should handle one process at a time. This is why we define the pool of tasks as holding as many processes as there are CPU threads at line 24 (this is the default behavior for `mp.Pool()` with no argument). If you want to specify a different number of processes with respect to the available number of CPU threads you may use the `cpu_count()` method in the `multiprocessing` module or in the `os` module (for example, `mp.cpu_count() - 1`).
 
 Once the multiprocessing pool is defined, we want to get stuff done. But before calling `apply_async()` on the pool's processes, we first need to create both the shared resource that we've been talking about and the lock that will ensure that only one process may access the shared resource at a given time. Unlike in real life, if you want to get stuff done in Python's `multiprocessing` module, you actually _do_ need a `Manager`. We first create this manager, then use it to create the `lock` and the `shared_list` (lines 25-27).
 
@@ -150,3 +146,18 @@ Notice how several worker processes that have been sleeping for different amount
 The last line of the output shows the shared resource `shared_list`: it contains the amount of time in seconds for which the computations lasted, one item per amount of time, in the order in which the processes have been completed. No value appears twice.
 
 This example shows that the execution of the `worker.py` script has been parallelized on several CPU threads and that every process successfully accessed the shared resource, by reading and updating it.
+
+## Further reading
+
+* [`subprocess`][] (Python documentation)
+* [`multiprocessing`][] (Python documentation)
+* [Parallel processing in Python][stackabuse] (Frank Hofmann on stackabuse)
+* [`multiprocessing` -- Manage processes like threads][pymotw] (Doug Hellmann on Python Module of the Week)
+
+<!-- links -->
+
+[pp]: {% post_url 2019-04-17-run-python-script-as-subprocess-with-multiprocessing %}
+[`subprocess`]: https://docs.python.org/3/library/subprocess.html
+[`multiprocessing`]: https://docs.python.org/3/library/multiprocessing.html
+[stackabuse]: https://stackabuse.com/parallel-processing-in-python/
+[pymotw]: https://pymotw.com/3/multiprocessing/index.html

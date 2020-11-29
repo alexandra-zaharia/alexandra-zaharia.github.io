@@ -5,15 +5,13 @@ categories: [Python, parallelism]
 tags: [Python, subprocess, multiprocessing]
 ---
 
-# Principle
+## The problem
 
-Suppose you have a Python script `worker.py` performing some long computation. Also suppose you need to perform these computations several times for different input data. If all the computations are independent from each other, one way to speed them up is to use Python's [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html) module.
+Suppose you have a Python script `worker.py` performing some long computation. Also suppose you need to perform these computations several times for different input data. If all the computations are independent from each other, one way to speed them up is to use Python's [`multiprocessing`][] module.
 
 This comes down to the difference between _sequential_ and _parallel_ execution. Suppose you have the tasks A, B, C and D, requiring 1, 2, 3 and 4 seconds, respectively, to complete. When ran sequentially, meaning one after the other, you'd need 10 seconds in order for all tasks to complete, whereas running them in parallel (if you have 4 available CPU cores) would take 4 seconds, give or take, because some overhead does exist.
 
 ![sequential vs parallel execution](/assets/img/posts/seq_vs_parallel.png)
-
-# Practice
 
 ## The worker script
 
@@ -84,9 +82,9 @@ if __name__ == '__main__':
 ```
 The tasks are ran in parallel using `NUMBER_OF_TASKS` (4) processes in a `multiprocessing` pool (lines 20-26). When we refer to the tasks being ran in parallel, we mean that the `apply_async()` method is applied to every task (line 23). The first argument to `apply_async()` is the method to execute asynchronously (`work()`), the second one is the argument for `work()` (`seconds`), and the third one is a callback, our `update_progress_bar()` function. 
 
-The `work()` method (lines 10-12) calls our previous script `worker.py` with the specified number of seconds. This is done through the Python [`subprocess`](https://docs.python.org/3/library/subprocess.html) module.
+The `work()` method (lines 10-12) calls our previous script `worker.py` with the specified number of seconds. This is done through the Python [`subprocess`][] module.
 
-As for [`tqdm`](https://tqdm.github.io/), it is a handy little package that displays a progress bar for the number of items in an iteration. It can be installed through `pip`, `conda` or `snap`.
+As for [`tqdm`][], it is a handy little package that displays a progress bar for the number of items in an iteration. It can be installed through `pip`, `conda` or `snap`.
 
 ## Parallelization in practice
 
@@ -109,4 +107,19 @@ As you can see, the four tasks finished in about 4 seconds, meaning that the exe
 
 The next post [Multiprocessing in Python with shared resources][np] iterates on what we have just seen in order to show how we can parallelize external Python scripts that need to access the same shared resource.
 
+## Further reading
+
+* [`subprocess`][] (Python documentation)
+* [`multiprocessing`][] (Python documentation)
+* [Parallel processing in Python][stackabuse] (Frank Hofmann on stackabuse)
+* [`multiprocessing` -- Manage processes like threads][pymotw] (Doug Hellmann on Python Module of the Week)
+
+
+<!-- links -->
+
 [np]: {% post_url 2019-04-17-multiprocessing-in-python-with-shared-resources %}
+[`subprocess`]: https://docs.python.org/3/library/subprocess.html
+[`multiprocessing`]: https://docs.python.org/3/library/multiprocessing.html
+[`tqdm`]: https://tqdm.github.io
+[stackabuse]: https://stackabuse.com/parallel-processing-in-python/
+[pymotw]: https://pymotw.com/3/multiprocessing/index.html
