@@ -10,7 +10,7 @@ math: true
 
 It can be useful to split large files, or even smaller files and ensure all the resulting volumes have the same size. For this we will be using `split`.
 
-# Splitting files
+## Splitting files
 
 We can split a larger file into smaller ones like this:
 
@@ -32,7 +32,7 @@ split -db 1G file pattern.
 
 The previous command splits `file` into several 1 Gb volumes, called `pattern.00`, `pattern.01`, `pattern.02` and so on.
 
-# Joining files
+## Joining files
 
 To join the volumes, we can `cat` the sorted file names and redirect them to an output file:
 

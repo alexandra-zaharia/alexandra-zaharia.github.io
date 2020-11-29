@@ -10,7 +10,7 @@ math: true
 
 I've compiled here two recipes for converting to `.mp3`.
 
-# Convert .m4a to .mp3
+## Convert .m4a to .mp3
 
 Install `lame` and `faad`, then `cd` into a directory containing `.m4a` files that you wish to convert to `.mp3` and run:
 
@@ -18,7 +18,7 @@ Install `lame` and `faad`, then `cd` into a directory containing `.m4a` files th
 for x in *.m4a ; do faad -o - "$x" | lame -V 0 - "${x%m4a}mp3" ; done
 ```
 
-# Convert .wma to .mp3
+## Convert .wma to .mp3
 
 Install `lame` and `mplayer`, then `cd` into a directory containing `.wma` files that you wish to convert to `.mp3` and run:
 

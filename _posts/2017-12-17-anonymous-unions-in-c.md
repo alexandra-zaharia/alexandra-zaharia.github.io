@@ -6,7 +6,7 @@ tags: [C, union]
 ---
 The first time I had to explain to students why a C `union` may sometimes come in handy, I came up with this example. As my students had only been exposed to C for about 15 hours, I needed to refrain from talking about standard use cases involving low-level operations where unions are very useful. 
 
-# The problem
+## The problem
 
 Suppose we have 2D segments defined by their endpoints, like this:
 
@@ -42,7 +42,7 @@ For example, in the figure at the right we have a segment with endpoints (1, 2) 
 
 Therefore, the result of either projection operation in terms of the data structures defined in the code snippet above can be either a `Segment` or a `Point2D`. And, as it so happens,  one cannot have a function return different result types in a strongly typed language such as C.
 
-# The solution: unions
+## The solution: unions
 
 Enter **unions**. They allow you to store different data types in the same memory space, but not at the same time. Like a `struct`, a union has members, but only one of them can store information at any given time. Why is this interesting, you ask? Here's why: a `union` has the size of its largest member. This is very important when aiming to reduce the memory footprint of an application.
 
@@ -77,7 +77,7 @@ p.proj.point.x = 0;
 p.proj.point.y = 0;
 ```
 
-# Even better: anonymous unions
+## Even better: anonymous unions
 
 I think you will agree that the access to `proj` is both tiring and ugly. We can avoid it if we nest the union *directly* inside the struct, without giving it a name. This is called an **anonymous union**. The catch is that anonymous unions are only available starting with [C11][c11]. So let's rewrite the data structure:
 
@@ -102,7 +102,7 @@ p.point.x = 0;
 p.point.y = 0;
 ```
 
-# Practical usage
+## Practical usage
 
 Great, so how do we use this? Let's look at one of the two projection functions, for instance the one that projects a given segment on the vertical (Y) axis. We could write it as follows:
 
@@ -130,7 +130,7 @@ Projection vertical_projection(Segment segment)
 }
 ```
 
-# Testing the solution
+## Testing the solution
 
 Let's test the `vertical_projection()` function on the red and blue segments above.
 
@@ -178,7 +178,7 @@ Point2D blue_v_proj = {0, 2};
 assert_is_point(vertical_projection(blue_segment), blue_v_proj);
 ```
 
-# Notes
+## Notes
 * These examples do not use pointers as it was beyond the scope of the class.
 * No student fell asleep during the class but they were all eerily quiet. I think they might find nested structures disturbing.
 * The full implementation is available on [GitHub][gh].

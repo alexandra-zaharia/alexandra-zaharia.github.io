@@ -8,7 +8,7 @@ math: true
 
 Suppose we need a generic vector data structure in C, where by *generic* we mean it can handle any type of data. A vector uses an underlying array, therefore it supports index-based access to its elements. Moreover, the underlying array is resizable, meaning that memory space is not wasted uselessly. If the vector is full, adding a new element causes the underlying array to double its size. If the vector is 75% empty, the underlying array halves its size.
 
-# How does a vector work?
+## How does a vector work?
 
 The ASCII figure below shows the example of a vector *v*, initially empty and with an initial
 capacity of 4 items:
@@ -60,7 +60,7 @@ remove item at index 0 :  | 5 | 9 |   |   |   <-- capacity is reduced by half si
                           -----------------
 ```
 
-# Comparison with alternative data structures
+## Comparison with alternative data structures
 
 A **fixed-size array** allows access to its elements in \\( O(1) \\) time. Adding items at the end of the array also takes \\( O(1) \\) time. However, insertion (other than at the end of the array) and deletion require \\( O(n) \\) time. As its name implies, a fixed-size array cannot change its size. 
 
@@ -70,7 +70,7 @@ In contrast to an array, a **linked list** allows insertion and deletion in \\( 
 
 An array (a fixed-size array or a resizing array, i.e. a vector) should be used when indexing happens more often than insertion or deletion at arbitrary positions. A linked list is more appropriate when indexing happens rarely and when insertions and deletions are frequent.
 
-# Resizing the vector
+## Resizing the vector
 
 A vector starts out with an initial capacity, for which we can make an educated guess depending on the application. Let us suppose a good choice for an initial capacity is 4. 
 
@@ -78,7 +78,7 @@ When the 5<sup>th</sup> item is added to the vector, its capacity doubles, becom
 
 **Halving the vector capacity** is more tricky. The aim is to strike a good balance between array resizing operations performed via `realloc()` and not wasting too much memory space. Suppose a vector has 9 items and its capacity is 16. If we remove one item, it would be tempting to halve the capacity on the spot. But if a 9<sup>th</sup> item needs to be added right away, we would have to double the capacity yet again. The best bet is to halve the vector capacity when it is one quarter full, because this means we have been removing items from the vector for quite some time and it is reasonable to assume that the need to double the capacity will not arise any time soon. Continuing the example, a vector would keep its capacity of 16 items as long as it has at least 5 items. When it only has 4 items, its capacity becomes 8. Consider another example of a vector with 513 elements and capacity 1024. If we start removing items, the capacity shrinks to 512 when only 256 items remain. The capacity further shrinks to 256 when only 128 items remain, and so on.
 
-# Vector definition
+## Vector definition
 
 Here is a bare-bones definition of a vector in C:
 
@@ -103,7 +103,7 @@ The `Vector` implementation in [libgcds][] (**Lib**rary for **G**eneric **C D**a
 [libgcds]: https://github.com/alexandra-zaharia/libgcds
 [cpp]: https://www.amazon.com/Design-Evolution-C-Bjarne-Stroustrup/dp/0201543303
 
-# A basic vector API
+## A basic vector API
 
 Any basic `Vector` API should have the following methods:
 
@@ -115,7 +115,7 @@ Any basic `Vector` API should have the following methods:
 
 In the remainder of this section we will implement each of these methods in turn.
 
-## vector_create()
+### vector_create()
 
 We start by allocating memory for a vector and return `NULL` if the allocation fails. Then we initialize the number of elements to 0 and the capacity to the initial capacity. We must also allocate memory for the underlying array `vector->data`. If this is not possible, we free the vector pointer and return `NULL`. If everything went fine, the function returns a pointer to the brand new vector.
 
@@ -138,7 +138,7 @@ Vector *vector_create()
 }
 ```
 
-## vector_free()
+### vector_free()
 
 If the pointer to `Vector` is not `NULL`, we attempt to deallocate its data, then the vector itself.
 
@@ -153,7 +153,7 @@ void vector_free(Vector *vector)
 }
 ```
 
-## _vector_resize()
+### _vector_resize()
 
 Yes, `_vector_resize()` is not listed above. The reason for this is that this method is not part of the public API, but it is required for methods that may need to resize the underlying array: `vector_add()`, `vector_insert()` and `vector_delete()`. The client of the `Vector` API does not even need to know that this function exists. In order to keep it *private* to the implementation file of the vector (the `.c` file), we will be declaring it `static`.
 
@@ -176,7 +176,7 @@ static int _vector_resize(Vector *vector, size_t capacity)
 }
 ```
 
-## vector_add()
+### vector_add()
 Adding an item at the end of a vector can fail if the vector or its data is `NULL`, or if the resizing is unsuccessful. Resizing the underlying array is performed if there is no free slot in the vector to add the new item.
 
 ```c
@@ -195,7 +195,7 @@ int vector_add(Vector *vector, void *item)
 }
 ```
 
-## vector_insert()
+### vector_insert()
 
 Inserting an item at an arbitrary position in a vector can fail if the vector or its data is `NULL`, if the index is incorrect, or if the resizing is unsuccessful. As for `vector_add()`, resizing is performed if there is no free slot for the new item. In addition, every item in the vector after the position designated by `index` must be shifted by one position to the right. A special case is identified where insertion takes place at the end of the vector, in which case `vector_add()` is used directly. As we've seen above, `vector_add()` may also fail, so a check for its return code is equally performed.
 
@@ -224,7 +224,7 @@ int vector_insert(Vector *vector, void *item, int index)
 }
 ```
 
-## vector_delete()
+### vector_delete()
 
 Deleting an item at an arbitrary position in a vector can fail if the vector or its data is `NULL`, if the index is incorrect, or if the resizing is unsuccessful. Resizing the underlying array to half its capacity is performed if the vector is one quarter full after deletion. Every item in the vector after the position designated by `index` must be shifted by one position to the left.
 
@@ -249,7 +249,7 @@ int vector_delete(Vector *vector, int index)
 }
 ```
 
-# An improved Vector API
+## An improved Vector API
 
 For all practical purposes, there is a high chance that the basic API we have just seen above is not sufficient. As the need arises, we may add several useful functions to our `Vector` API, such as:
 
@@ -258,7 +258,7 @@ For all practical purposes, there is a high chance that the basic API we have ju
 
 > **Note**: In both cases that we do not actually examine the _value_ of the item, since at this point we cannot even know what kind of items we are dealing with. We simply compare void pointers, which enables us to determine whether the given item exists in the vector's `data` array.
 
-## vector_contains()
+### vector_contains()
 
 If the vector is not `NULL`, we iterate its `data` array and compare its every item against the specified one.
 
@@ -273,7 +273,7 @@ bool vector_contains(Vector* vector, void* item)
 }
 ```
 
-## vector_index()
+### vector_index()
 
 If the vector is not `NULL`, we iterate its `data` array until we find the specified item or until we hit the end of the array. 
 ```c
@@ -290,11 +290,11 @@ int vector_index(Vector* vector, void* item)
 }
 ```
 
-# Examples of vectors
+## Examples of vectors
 
 Here we will see how two clients may use the `Vector` API that we have just examined: one client creates a vector of integers, and the other one creates a vector of user-defined data structures.
 
-## Example #1: A vector of integers
+### Example #1: A vector of integers
 
 Suppose we need a vector to handle integers. First, values 2, 4 and 6 are added at the end of the vector using `vector_add()`. The vector is `[ 2 4 6 ]`. Second, the values 1, 3 and 5 are inserted in between using `vector_insert()`, such that the vector becomes `[ 1 2 3 4 5 6 ]`. Finally, the last three values are deleted from the vector using `vector_delete()`. The vector is now `[ 1 2 3 ]`. The following program details these steps:
 
@@ -345,7 +345,7 @@ void vector_int_print(Vector *vector)
 
 > **Note**: Checks for return codes from `vector_add()`, `vector_insert()` and `vector_delete()` should be performed, but have been omitted here for the sake of brevity.
 
-## Example #2: A vector of user-defined data structures
+### Example #2: A vector of user-defined data structures
 
 Suppose we now need a vector to handle a user-defined data structure representing 2D points. We first add the points with coordinates (1, 10) and (3, 30) to the vector using `vector_add()`. We then insert the point (2, 20) in between using `vector_insert()`. The following program details these steps:
 
@@ -396,7 +396,7 @@ void vector_point_print(Vector *vector)
 
 > **Note**: Checks for return codes from `vector_add()` and `vector_insert()` should be performed, but have been omitted here for the sake of brevity.
 
-# Testing the implementation
+## Testing the implementation
 This `Vector` implementation has been extensively tested using the [cmocka](https://cmocka.org/) testing framework. The tests are provided in the file [vector-test.c]. 
 
 [vector-test.c]: https://github.com/alexandra-zaharia/libgcds/blob/master/tests/vector-test.c
@@ -421,6 +421,6 @@ valgrind --leak-check=full ./test-vector
 
 There should be no memory leaks :-)
 
-# Availability
+## Availability
 
 The full `Vector` implementation along with the tests is available on [GitHub][libgcds].
