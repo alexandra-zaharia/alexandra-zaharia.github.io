@@ -42,9 +42,6 @@ social:
 
 google_site_verification: mlwABpnF22MCyeNCQoei9VdIPvqy_uV7b4v_vArTxXM # change to your verification string
 
-#--------------------------
-
-
 # Only if your site type is GitHub Project sites and doesn't have a custom domain,
 # change below value to '/projectname'.
 baseurl: ''
@@ -68,16 +65,19 @@ disqus:
   shortname: 'azc'    # Fill with your Disqus shortname. › https://help.disqus.com/en/articles/1717111-what-s-a-shortname
 
 
-# Prefer color scheme setting, available values:
+# Prefer color scheme setting.
 #
-#     dual   - Follow the system prefer color by default, and a toggle will display
-#              in the left bottom of Sidebar, which used for switch the theme between dark and light.
+# Note: Keep empty will follow the system prefer color by default,
+# and there will be a toggle to switch the theme between dark and light
+# on the bottom left of the sidebar.
+#
+# Available options:
 #
 #     light  - Use the light color scheme
 #
 #     dark   - Use the dark color scheme
 #
-theme_mode: dual
+theme_mode:   # <light|dark>
 
 # boolean type, the global switch for ToC in posts.
 toc: true
@@ -85,15 +85,10 @@ toc: true
 # paginate: 10
 paginate: 6
 
-markdown: kramdown
-
-highlighter: rouge
-
 kramdown:
-  input: GFM
   syntax_highlighter: rouge
-  syntax_highlighter_opts: # Rouge Options › https://github.com/jneen/rouge#full-options
-    css_class: 'highlight'
+  syntax_highlighter_opts:   # Rouge Options › https://github.com/jneen/rouge#full-options
+    css_class: highlight
     # default_lang: console
     span:
       line_numbers: false
@@ -198,5 +193,5 @@ jekyll-archives:
     category: category
     tag: tag
   permalinks:
-    tag: '/tags/:name/'
-    category: '/categories/:name/'
+    tag: /tags/:name/
+    category: /categories/:name/
