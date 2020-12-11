@@ -2,7 +2,7 @@
 title: Function timeout in Python using the signal module
 date: 2016-02-05 00:00:00 +0100
 categories: [Python, timeout]
-tags: [Python, signal]
+tags: [python, signal]
 ---
 
 ## The problem

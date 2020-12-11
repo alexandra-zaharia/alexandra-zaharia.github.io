@@ -2,7 +2,7 @@
 title: How to check the SSH host key fingerprint
 date: 2020-09-28 00:00:00 +0100
 categories: [Linux, security]
-tags: [Linux, ssh]
+tags: [linux, ssh]
 ---
 
 When using [SSH][] to authenticate to a remote machine, password authentication can and should be replaced with SSH key pairs. 

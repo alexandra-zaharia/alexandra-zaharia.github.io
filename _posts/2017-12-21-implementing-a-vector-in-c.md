@@ -2,7 +2,7 @@
 title: Implementing a vector in C
 date: 2017-12-21 00:00:00 +0100
 categories: [C, data structures]
-tags: [C, vector]
+tags: [c, vector]
 math: true
 ---
 

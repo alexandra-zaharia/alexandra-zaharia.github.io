@@ -2,7 +2,7 @@
 title: (Anonymous) unions in C
 date: 2017-12-17 00:00:00 +0100
 categories: [C, data types]
-tags: [C, union]
+tags: [c, union]
 ---
 The first time I had to explain to students why a C `union` may sometimes come in handy, I came up with this example. As my students had only been exposed to C for about 15 hours, I needed to refrain from talking about standard use cases involving low-level operations where unions are very useful. 
 

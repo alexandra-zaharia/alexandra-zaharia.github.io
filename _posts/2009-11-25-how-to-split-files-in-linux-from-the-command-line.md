@@ -2,7 +2,7 @@
 title: How to split files in Linux from the command line
 date: 2009-11-25 00:00:00 +0100
 categories: [Linux, command line]
-tags: [Linux, split]
+tags: [linux, split]
 math: true
 ---
 

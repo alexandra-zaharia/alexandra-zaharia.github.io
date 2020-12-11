@@ -2,7 +2,7 @@
 title: Getting the most out of your webcam on Linux
 date: 2020-12-04 19:38:00 +0100
 categories: [Linux, webcam]
-tags: [Linux, webcam]
+tags: [linux, webcam]
 ---
 
 ![Chinese webcam on Amazon](/assets/img/posts/webcam.jpg){: width="400"}

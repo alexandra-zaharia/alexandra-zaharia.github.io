@@ -2,7 +2,7 @@
 title: Summing a column with awk
 date: 2016-04-28 00:00:00 +0100
 categories: [Linux, command line]
-tags: [Linux, awk]
+tags: [linux, awk]
 ---
 
 Suppose you want to sum values on the _n_<sup>th</sup> column in a file. Here is how to do this using awk:

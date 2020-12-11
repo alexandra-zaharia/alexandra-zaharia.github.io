@@ -2,7 +2,7 @@
 title: Converting .m4a and .wma to .mp3
 date: 2008-02-25 00:00:00 +0100
 categories: [Linux, audio]
-tags: [Linux, mp3, m4a, wma]
+tags: [linux, mp3, m4a, wma]
 math: true
 ---
 

@@ -2,7 +2,7 @@
 title: Function timeout in Python using the multiprocessing module
 date: 2016-02-08 00:00:00 +0100
 categories: [Python, timeout]
-tags: [Python, multiprocessing]
+tags: [python, multiprocessing]
 ---
 
 ## The problem

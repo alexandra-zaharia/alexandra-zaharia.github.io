@@ -2,7 +2,7 @@
 title: How to squash two non-consecutive commits in Mercurial
 date: 2020-12-11 18:15:00 +0100
 categories: [Tools, Mercurial]
-tags: [Mercurial, version control]
+tags: [mercurial, version control]
 ---
 
 ## The problem

@@ -2,7 +2,7 @@
 title: Prevent screen tearing in Linux using the NVidia driver
 date: 2020-12-06 01:00:00 +0100
 categories: [Linux, video]
-tags: [Linux, Manjaro, NVidia]
+tags: [linux, manjaro, nvidia]
 ---
 
 I spent the whole afternoon for this very easy to fix problem. I needed to install the proprietary NVidia driver instead of the open-source one (because Unreal Engine 4 and because DaVinci Resolve, that's why). However my desktop was utterly useless afterwards because of an obscenely low refresh rate that was literally making my head spin. The horrible screen tearing had nothing to do with the falsely reported 144 Hz refresh rate of my desktop. The open-source Nvidia driver was actually capable of providing this refresh rate, but not the proprietary NVidia one... out of the box.

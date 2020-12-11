@@ -2,7 +2,7 @@
 title: How to migrate user settings and data between Linux machines on a LAN
 date: 2020-12-09 20:26:00 +0100
 categories: [Linux, command line]
-tags: [Linux, Manjaro, migration]
+tags: [linux, manjaro, migration]
 ---
 
 Ever had to set up a new Linux machine (for example your work laptop), and wanted to import the exact same settings that you use on your main (or home) machine? Maybe some data as well?
