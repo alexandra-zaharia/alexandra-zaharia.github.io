@@ -34,7 +34,7 @@ The first step is to reorder the revision history in order to make the revisions
 hg histedit
 ```
 
-Select the revision you want to move (`1: stuff on Y`) and move it _down_ (press capital `J`). Why down? Well, `hg log` is reverse chronological so the latest revision on top, while `hg histedit` is chronological so the latest revision is at the bottom. Confusing, I know. Just commit (press `c` and edit the commit message) and now your `hg log` should show the reordered revisions:
+Select the revision you want to move (`1: stuff on Y`) and move it _down_ (press capital `J`). Why down? Well, `hg log` is reverse chronological so the latest revision on top, while `hg histedit` is chronological so the latest revision is at the bottom. Confusing, I know. Just commit (press `c`) and now your `hg log` should show the reordered revisions:
 
 ```
 3: more stuff on Y
