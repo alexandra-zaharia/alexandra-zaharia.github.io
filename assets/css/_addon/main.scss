@@ -807,10 +807,10 @@ div.post-content .table-wrapper {
   word-wrap: break-word;
 
   @mixin img($caption: false) {
-    > img:not([style]):not([class]) {
+    > img[data-src] {
       margin: 0.5rem 0;
 
-      &:not(.normal):not(.left):not(.right) {
+      &:not([class]) {
         @include align-center;
 
         @if $caption {
@@ -864,16 +864,28 @@ div.post-content .table-wrapper {
   ul {
     &.task-list, &:not([class]) {
       padding-left: 2rem;
-
-      .task-list-item {
-        list-style-type: none;
-      }
-
-      input[type=checkbox] {
-        margin: 0 .5rem .25rem -1.3rem;
-        vertical-align: middle;
-      }
     }
+
+    // attribute 'hide-bullet' was added by liquid
+    .task-list-item[hide-bullet] {
+      list-style-type: none;
+
+      > i { // checkbox icon
+        margin: 0 .4rem .2rem -1.4rem;
+        vertical-align: middle;
+        color: var(--checkbox-color);
+        &.checked {
+          color: var(--checkbox-checked-color);
+        }
+      }
+
+    }
+
+    input[type=checkbox] {
+      margin: 0 .5rem .2rem -1.3rem;
+      vertical-align: middle;
+    }
+
   } // ul
 
 } // .post-content
@@ -1001,13 +1013,6 @@ div.post-content .table-wrapper {
 
   .site-subtitle {
     @include ml-mr(1.8rem);
-  }
-
-  /* table text in small screens */
-  div > table, p ~ table {
-    width: 100%;
-    table-layout: fixed;
-    word-wrap: break-word;
   }
 
   #main-wrapper {
