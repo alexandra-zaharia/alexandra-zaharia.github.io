@@ -1,9 +1,5 @@
 <!--
   Jekyll Simple Search loader
-  v2.0
-  https://github.com/cotes2020/jekyll-theme-chirpy
-  © 2017-2019 Cotes Chung
-  MIT License
 -->
 
 {% capture result_elem %}
@@ -25,7 +21,7 @@
 SimpleJekyllSearch({
   searchInput: document.getElementById('search-input'),
   resultsContainer: document.getElementById('search-results'),
-  json: '{{ site.baseurl }}/assets/js/data/search.json',
+  json: '{{ '/assets/js/data/search.json' | relative_url }}',
   searchResultTemplate: '{{ result_elem | strip_newlines }}',
   noResultsText: '{{ not_found }}'
 });
