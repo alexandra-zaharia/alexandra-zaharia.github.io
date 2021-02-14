@@ -68,6 +68,7 @@ disqus:
 #
 #     dark   - Use the dark color scheme
 #
+theme: jekyll-theme-chirpy
 theme_mode:   # [light|dark]
 
 # The CDN endpoint for images.
