@@ -5,9 +5,11 @@ categories: [Linux, webcam]
 tags: [linux, webcam]
 ---
 
+**\[UPDATE February 26 2021: This webcam didn't fare so well after all. I switched to a [Logitech C920][np] after three months due to unacceptable random disconnects.\]**
+
 ![Chinese webcam on Amazon](/assets/img/posts/webcam.jpg){: width="400"}
 
-So... I bought a Chinese webcam. And it's not that bad, now that it works. See, the first time I plugged it in, `dmesg` wouldn't stop complaining:
+So... I bought a [Chinese webcam][]. And it's not that bad, now that it works. See, the first time I plugged it in, `dmesg` wouldn't stop complaining:
 
 ```
 [65184.538621] usb 2-9.5: 3:1: cannot set freq 16000 to ep 0x83
@@ -129,3 +131,7 @@ In this post I detail the solutions that work best for me and my low-cost webcam
 * `vokoscreen`
 * `vlc`
 * `mencoder`
+
+<!-- links -->
+[Chinese webcam]: https://www.amazon.fr/dp/B08BNNSTGM
+[np]: {% post_url 2021-02-26-autofocus-of-the-logitech-c920-webcam-in-linux %}
