@@ -56,7 +56,7 @@ If you need a graphical user interface, you can use `guvcview`.
 
 ## Conclusion
 
-All in all it's not a bad webcam. I just wish the sensor was as powerful as the one in the Chinese webcam but without its stability (random disconnection) issue.
+All in all it's not a bad webcam. I just wish the sensor was as powerful as the one in the Chinese webcam but without its stability (random disconnect) issue.
 
 
 <!-- links -->
