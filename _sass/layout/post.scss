@@ -23,6 +23,10 @@
   padding-right: $pr;
 }
 
+.timeago::before {
+  content: attr(prefix);
+}
+
 #post-wrapper .post-meta {
   > div:nth-child(2) {
     > span:not(:first-child)::before {
@@ -44,7 +48,7 @@
     @include align-center;
 
     margin-top: 0;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.5rem !important;
   }
 }
 
@@ -66,11 +70,13 @@
     @include btn-post-nav;
 
     color: var(--link-color);
+
     &:hover {
       background: #2a408e;
       color: #fff;
       border-color: #2a408e;
     }
+
     &.disabled {
       @include btn-post-nav;
 
@@ -78,12 +84,33 @@
       cursor: not-allowed;
       background: none;
       color: gray;
+
       &:hover {
         border-color: none;
       }
     }
+
     &.btn-outline-primary.disabled:focus {
       box-shadow: none;
+    }
+
+    &::before {
+      color: var(--text-muted-color);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      content: attr(prompt);
+    }
+
+    &:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      left: 0.5px;
+    }
+
+    &:last-child {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      right: 0.5px;
     }
   }
 
@@ -94,24 +121,6 @@
     white-space: normal;
   }
 
-  a {
-    &::before {
-      color: var(--text-muted-color);
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      content: attr(prompt);
-    }
-    &:first-child {
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      left: 0.5px;
-    }
-    &:last-child {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-      right: 0.5px;
-    }
-  }
 } // .post-navigation
 
 @keyframes fade-up {
@@ -146,6 +155,10 @@
   line-height: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+
+  &.nav-link:not(.active) {
+    color: inherit;
+  }
 }
 
 /* --- Related Posts --- */
@@ -224,10 +237,6 @@
 .share-wrapper {
   vertical-align: middle;
   user-select: none;
-
-  i {
-    font-weight: 400;
-  }
 
   .share-icons {
     font-size: 1.2rem;
@@ -334,12 +343,6 @@
       }
     }
   } // .post
-}
-
-@media all and (min-width: 768px) and (max-width: 830px) {
-  .post img {
-    max-width: calc(100% + 2rem);
-  }
 }
 
 /* Hide SideBar and TOC */

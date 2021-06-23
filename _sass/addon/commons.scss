@@ -229,7 +229,7 @@ footer {
 
     @extend %no-bottom-border;
 
-    color: #6c757d;
+    color: inherit;
   }
 
 }
@@ -357,6 +357,7 @@ footer {
 }
 
 .post-content {
+  font-size: 1.08rem;
   line-height: 1.8;
   margin-top: 2rem;
   overflow-wrap: break-word;
@@ -364,37 +365,21 @@ footer {
 
   img[data-src] {
     margin: 0.5rem 0;
-  }
 
-  @mixin img-caption {
-    + em {
-      display: block;
-      text-align: center;
-      font-style: normal;
-      font-size: 80%;
-      padding: 0;
-      color: #6d6c6c;
+    &.left {
+      float: left;
+      margin: 0.75rem 1rem 1rem 0;
     }
-  }
 
-  @mixin img($caption: false) {
-
-    > img[data-src] {
-      @if $caption {
-        @include img-caption;
-      }
-
-      &.left {
-        float: left;
-        margin: 0.75rem 1rem 1rem 0;
-      }
-
-      &.right {
-        float: right;
-        margin: 0.75rem 0 1rem 1rem;
-      }
-
+    &.right {
+      float: right;
+      margin: 0.75rem 0 1rem 1rem;
     }
+
+    &.shadow {
+      filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.08));
+    }
+
   }
 
   a {
@@ -402,7 +387,7 @@ footer {
       color: var(--link-color);
     }
 
-    &:not(.img-hyperlink) {
+    &:not(.img-link) {
       @extend %link-color;
       @extend %link-underline;
       &:hover {
@@ -410,23 +395,26 @@ footer {
       }
     }
 
-    &.img-hyperlink {
-      @include img;
-      @include img-caption;
+    &.popup { // created by `_includes/img-extra.html`
+      cursor: zoom-in;
+
+      > img[data-src]:not(.normal):not(.left):not(.right) {
+        @include align-center;
+      }
     }
-  }
 
-  > p {
-    > img[data-src]:not(.normal):not(.left):not(.right) {
-      @include align-center;
+    &.img-link {
+      + em {
+        display: block;
+        text-align: center;
+        font-style: normal;
+        font-size: 80%;
+        padding: 0;
+        color: #6d6c6c;
+      }
     }
-  }
 
-  p {
-    @include img(true);
-
-    font-size: 1.08rem;
-  }
+  } // a
 
   ul {
     // attribute 'hide-bullet' was added by liquid
@@ -521,6 +509,10 @@ footer {
 
 /* --- Effects classes --- */
 
+.semi-bold {
+  font-weight: 600 !important;
+}
+
 .loaded {
   display: block !important;
 
@@ -581,6 +573,20 @@ footer {
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
+/* --- Overriding --- */
+
+// magnific-popup
+figure .mfp-title {
+  text-align: center;
+  padding-right: 0;
+  margin-top: 0.5rem;
+}
+
+// mermaid
+.mermaid {
+  text-align: center;
+}
+
 /* --- sidebar layout --- */
 
 $tab-count: 5 !default;
@@ -598,6 +604,15 @@ $sidebar-display: "sidebar-display";
   width: $sidebar-width-medium;
   z-index: 99;
   background: var(--sidebar-bg);
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 
   a {
     @include sidebar-links;
@@ -725,12 +740,12 @@ $sidebar-display: "sidebar-display";
 
     @for $i from 1 through $tab-count {
       $offset: $tab-count - $i;
-      $top: -$offset * $tab-height + $tab-cursor-height / 2;
+      $top: -$offset * $tab-height + ($tab-height - $tab-cursor-height) / 2;
 
       @if $i < $tab-count {
         > li.active:nth-child(#{$i}),
         > li.nav-item:nth-child(#{$i}):hover {
-          ~li:last-child::after {
+          ~ li:last-child::after {
             @include fix-cursor($top);
           }
         }
@@ -811,9 +826,6 @@ $sidebar-display: "sidebar-display";
 
 #search-result-wrapper {
   display: none;
-  position: fixed;
-  top: 0;
-  padding-top: 3rem;
   height: 100%;
   overflow: auto;
   .post-content {
@@ -895,7 +907,6 @@ $sidebar-display: "sidebar-display";
   border-radius: 0;
   padding: 0.18rem 0.3rem;
   color: var(--text-color);
-  font-size: 95%;
 
   &:focus {
     box-shadow: none;
@@ -944,7 +955,7 @@ $sidebar-display: "sidebar-display";
   }
 
   > div {
-    max-width: 100%;
+    width: 100%;
 
     &:not(:last-child) {
       margin-bottom: 1rem;
@@ -1061,7 +1072,14 @@ $sidebar-display: "sidebar-display";
   -webkit-transform: translate3d(0, -5px, 0);
 }
 
-/* --- Responsive Design --- */
+/*
+  Responsive Design:
+
+ {sidebar, content, panel} >= 1120px screen width
+ {sidebar, content} >= 850px screen width
+ {content} <= 849px screen width
+
+*/
 
 @media all and (max-width: 576px) {
 
@@ -1111,8 +1129,8 @@ $sidebar-display: "sidebar-display";
 
 }
 
-/* Hide Sidebar and TOC */
-@media all and (max-width: 830px) {
+/* hide sidebar and panel */
+@media all and (max-width: 849px) {
   %slide {
     -webkit-transition: transform 0.4s ease;
     transition: transform 0.4s ease;
@@ -1229,16 +1247,17 @@ $sidebar-display: "sidebar-display";
     }
   }
 
-}
+} // max-width: 849px
 
+/* Phone & Pad */
 @media all and (min-width: 577px) and (max-width: 1199px) {
   footer > .d-flex > div {
     width: 312px;
   }
 }
 
-/* Sidebar visible */
-@media all and (min-width: 831px) {
+/* Sidebar is visible */
+@media all and (min-width: 850px) {
   /* Solved jumping scrollbar */
   html {
     overflow-y: scroll;
@@ -1255,6 +1274,10 @@ $sidebar-display: "sidebar-display";
   #search-wrapper {
     width: 22%;
     min-width: 150px;
+  }
+
+  #search-result-wrapper {
+    margin-top: 3rem;
   }
 
   div.post-content .table-wrapper > table {
@@ -1281,9 +1304,9 @@ $sidebar-display: "sidebar-display";
 
 }
 
-/* iPad 9.7" horizontal */
-@media all and (min-width: 992px) and (max-width: 1024px) {
-  #main-wrapper .col-lg-11 {
+/* Pad horizontal */
+@media all and (min-width: 992px) and (max-width: 1199px) {
+  #main .col-lg-11 {
     -webkit-box-flex: 0;
     -ms-flex: 0 0 96%;
     flex: 0 0 96%;
@@ -1291,11 +1314,17 @@ $sidebar-display: "sidebar-display";
   }
 }
 
-/* Compact icons in sidebar & TOC hidden */
-@media all and (min-width: 832px) and (max-width: 1199px) {
+/* Compact icons in sidebar & panel hidden */
+@media all and (min-width: 850px) and (max-width: 1199px) {
 
   #sidebar {
     width: $sidebar-width-small;
+
+    .site-subtitle {
+      margin-left: 1rem;
+      margin-right: 1rem;
+    }
+
     .sidebar-bottom {
       a,
       span {
@@ -1309,10 +1338,6 @@ $sidebar-display: "sidebar-display";
 
   #topbar-wrapper {
     left: 210px;
-  }
-
-  #search-result-wrapper {
-    width: calc(100% - 210px);
   }
 
   #search-results > div {
@@ -1344,7 +1369,7 @@ $sidebar-display: "sidebar-display";
 
 }
 
-/* Pannel hidden */
+/* panel hidden */
 @media all and (max-width: 1199px) {
   #panel-wrapper {
     display: none;
@@ -1392,12 +1417,8 @@ $sidebar-display: "sidebar-display";
     transition: all 0.3s ease-in-out;
   }
 
-  #search-result-wrapper {
-    width: calc(100% - 260px);
-  }
-
   #search-results > div {
-    max-width: 46%;
+    width: 46%;
     &:nth-child(odd) {
       margin-right: 1.5rem;
     }
@@ -1410,7 +1431,7 @@ $sidebar-display: "sidebar-display";
     }
   }
 
-  .post-content p {
+  .post-content {
     font-size: 1.03rem;
   }
 
@@ -1603,12 +1624,11 @@ $sidebar-display: "sidebar-display";
   } // #sidebar
 
   footer > div.d-flex {
-    width: 87%;
+    width: 92%;
     max-width: 1140px;
   }
 
   #search-result-wrapper {
-    width: calc(100% - #{$sidebar-width-large});
     > div {
       max-width: #{$main-content-max-width};
     }
@@ -1651,7 +1671,7 @@ $sidebar-display: "sidebar-display";
   }
 
   #search-result-wrapper {
-    padding-right: calc(100% - #{$sidebar-width-large} - 1530px);
+    padding-right: calc(100% - #{$sidebar-width-large} - 1180px);
   }
 
   #panel-wrapper {
