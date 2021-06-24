@@ -11,10 +11,10 @@ baseurl: ''
 lang: en-US
 
 # Change to your timezone › http://www.timezoneconverter.com/cgi-bin/findzone/findzone
-timezone: Asia/Shanghai
+timezone: Europe/Paris
 
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
-#--------------------------
+# --------------------------
 
 title: Alexandra Zaharia               # the main title
 
@@ -45,13 +45,7 @@ social:
     # - https://www.linkedin.com/in/username
 
 google_site_verification: mlwABpnF22MCyeNCQoei9VdIPvqy_uV7b4v_vArTxXM # change to your verification string
-
-# Only if your site type is GitHub Project sites and doesn't have a custom domain,
-# change below value to '/projectname'.
-baseurl: ''
-
-# Change to your timezone › http://www.timezoneconverter.com/cgi-bin/findzone/findzone
-timezone: Europe/Paris
+# --------------------------
 
 google_analytics:
   id: 'G-Z7ZY7JRFQJ'          # Fill with your Google Analytics ID
@@ -63,10 +57,6 @@ google_analytics:
     proxy_url: ''
     proxy_endpoint: ''
     cache: false  # pv data local cache, good for the users from GFW area.
-
-disqus:
-  comments: true  # boolean type, the global switch for posts comments.
-  shortname: 'azc'    # Fill with your Disqus shortname. › https://help.disqus.com/en/articles/1717111-what-s-a-shortname
 
 # Prefer color scheme setting.
 #
@@ -94,6 +84,10 @@ avatar: /assets/img/site/avatar.jpg
 
 # boolean type, the global switch for ToC in posts.
 toc: true
+
+disqus:
+  comments: true  # boolean type, the global switch for posts comments.
+  shortname: 'azc'    # Fill with your Disqus shortname. › https://help.disqus.com/en/articles/1717111-what-s-a-shortname
 
 paginate: 10
 
@@ -176,4 +170,3 @@ jekyll-archives:
 
 plugins:
   - jemoji
-
