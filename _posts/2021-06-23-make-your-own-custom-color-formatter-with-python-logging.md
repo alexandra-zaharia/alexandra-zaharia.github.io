@@ -24,7 +24,7 @@ import logging
 import datetime
 
 # Create custom logger logging all five levels 
-logger = logging.getLogger('__name__')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Define format for logs
