@@ -1,7 +1,7 @@
 ---
 title: Kill a Python subprocess and its children when a timeout is reached
 date: 2021-07-05 00:00:00 +0100
-categories: [Python, subprocess]
+categories: [Python, subprocess, timeout]
 tags: [python, process, subprocess, signal]
 ---
 
