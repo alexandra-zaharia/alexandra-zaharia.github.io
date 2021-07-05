@@ -1,7 +1,7 @@
 ---
 title: Multiprocessing in Python with shared resources
 date: 2019-04-17 01:00:00 +0100
-categories: [Python, parallelism]
+categories: [Python, parallelism, subprocess]
 tags: [python, subprocess, multiprocessing, lock]
 ---
 

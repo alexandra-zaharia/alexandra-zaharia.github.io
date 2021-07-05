@@ -1,7 +1,7 @@
 ---
 title: Run a Python script as a subprocess with the multiprocessing module
 date: 2019-04-17 00:00:00 +0100
-categories: [Python, parallelism]
+categories: [Python, parallelism, subprocess]
 tags: [python, subprocess, multiprocessing]
 ---
 
