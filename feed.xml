@@ -1,0 +1,1442 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://alexandra-zaharia.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://alexandra-zaharia.github.io/" rel="alternate" type="text/html" hreflang="en-US" /><updated>2021-07-07T09:59:38+02:00</updated><id>https://alexandra-zaharia.github.io/feed.xml</id><title type="html">Alexandra Zaharia</title><subtitle>Alexandra Zaharia. Dev blog. Linux, programming, software engineering, software development, C, Python, algorithms, data structures.</subtitle><author><name>Alexandra Zaharia</name></author><entry><title type="html">How to stop a Python thread cleanly</title><link href="https://alexandra-zaharia.github.io/posts/how-to-stop-a-python-thread-cleanly/" rel="alternate" type="text/html" title="How to stop a Python thread cleanly" /><published>2021-07-06T01:00:00+02:00</published><updated>2021-07-07T09:58:40+02:00</updated><id>https://alexandra-zaharia.github.io/posts/how-to-stop-a-python-thread-cleanly</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/how-to-stop-a-python-thread-cleanly/">&lt;p&gt;Suppose a Python thread needs to be stopped cleanly (it might need to perform cleanup).&lt;/p&gt;
+
+&lt;p&gt;For illustration, we will take a very simple program in with a single “worker” thread that displays a message when it is done. The message is a placeholder for real cleanup, and the thread itself sleeps for a given number of iterations (as a placeholder for significant work). In our example, we want to stop the thread through a keyboard interrupt (Ctrl + C).&lt;/p&gt;
+
+&lt;h2 id=&quot;by-default-the-thread-is-not-stopped-cleanly&quot;&gt;By default, the thread is not stopped cleanly&lt;/h2&gt;
+
+&lt;p&gt;In this first version, the program can be stopped by hitting Ctrl + C, but the thread keeps running. Here is the program:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;threading&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;do_some_work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'iteration &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;0.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Thread done'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;do_some_work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Program done'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here is what happens when stopping it via a keyboard interrupt (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;...&lt;/code&gt; denotes output that was snipped for readability purposes):&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;iteration 1/10
+iteration 2/10
+^CTraceback (most recent call last):
+  ...
+KeyboardInterrupt
+iteration 3/10
+iteration 4/10
+^CException ignored in: &amp;lt;module 'threading' from '/home/alex/miniconda3/lib/python3.7/threading.py'&amp;gt;
+  ...
+KeyboardInterrupt
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The first Ctrl + C stops the main program, but not the thread. The second time, the thread is stopped as well.&lt;/p&gt;
+
+&lt;h2 id=&quot;using-a-daemon-thread-is-not-a-good-idea&quot;&gt;Using a daemon thread is not a good idea&lt;/h2&gt;
+
+&lt;p&gt;The Python &lt;a href=&quot;https://docs.python.org/3/library/threading.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;threading&lt;/code&gt;&lt;/a&gt; documentation explains that a thread may be started as a daemon, meaning that “the entire Python program exits when only daemon threads are left”. The main program itself is not a daemon thread.&lt;/p&gt;
+
+&lt;p&gt;While this approach has the merit of effectively stopping the thread, it does not allow to exit it cleanly. From the Python documentation:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Daemon threads are abruptly stopped at shutdown. Their resources (such as open files, database transactions, etc.) may not be released properly. If you want your threads to stop gracefully, make them non-daemonic and use a suitable signalling mechanism such as an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Event&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&quot;a-clean-thread-exit-using-events-and-signals&quot;&gt;A clean thread exit using events and signals&lt;/h2&gt;
+
+&lt;p&gt;Following on the previous note, a threading &lt;a href=&quot;https://docs.python.org/3/library/threading.html#threading.Event&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Event&lt;/code&gt;&lt;/a&gt; is a simple object that can be set or cleared. It can be used to signal to the thread that it needs perform its cleanup and then stop.&lt;/p&gt;
+
+&lt;p&gt;The idea is to use such an event here (let us call it a &lt;em&gt;stop event&lt;/em&gt;). Initially not set, the stop event becomes set when a keyboard interrupt is received. The worker thread then breaks out from the loop if the stop event is set and performs its cleanup.&lt;/p&gt;
+
+&lt;p&gt;Creating the stop event is straightforward (it can take any name):&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The worker thread checks whether the stop event is set:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The stop event needs to be set when a keyboard interrupt is intercepted. This is done by registering the SIGINT &lt;a href=&quot;https://en.wikipedia.org/wiki/Signal_(IPC)&quot;&gt;signal&lt;/a&gt; with a handler function. The registration is done in the main program:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SIGINT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_kb_interrupt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;    
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The handler function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;handle_kb_interrupt&lt;/code&gt; must have two arguments, the signal and the frame, even though the second argument is not used:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;handle_kb_interrupt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here is the full program:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;signal&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;threading&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;do_some_work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'iteration &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;0.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Thread done'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;handle_kb_interrupt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stop_event&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SIGINT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_kb_interrupt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;    
+    &lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;threading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;do_some_work&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;thread&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Program done'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here is the output when hitting Ctrl + C in the new version of the program:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;iteration 1/10
+iteration 2/10
+iteration 3/10
+^CThread done
+Program done
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Notice that when the thread is stopped it now finally gets to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print('Thread done')&lt;/code&gt; line (a placeholder for an actual cleanup task). Moreover, the main program also gets to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print('Program done')&lt;/code&gt; line. Clean exit from a thread can therefore be achieved using a threading event and a signal handler.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-reading&quot;&gt;Further reading&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/threading.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;threading&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/signal.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signal&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Signal_(IPC)&quot;&gt;Signals&lt;/a&gt; (Wikipedia)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Python" /><category term="parallelism" /><category term="thread" /><category term="python" /><category term="threads" /><summary type="html">Suppose a Python thread needs to be stopped cleanly (it might need to perform cleanup).</summary></entry><entry><title type="html">Kill a Python subprocess and its children when a timeout is reached</title><link href="https://alexandra-zaharia.github.io/posts/kill-subprocess-and-its-children-on-timeout-python/" rel="alternate" type="text/html" title="Kill a Python subprocess and its children when a timeout is reached" /><published>2021-07-05T01:00:00+02:00</published><updated>2021-07-06T00:04:50+02:00</updated><id>https://alexandra-zaharia.github.io/posts/kill-subprocess-and-its-children-on-timeout-python</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/kill-subprocess-and-its-children-on-timeout-python/">&lt;p&gt;Suppose a Python script needs to launch an external command. This can be done using the &lt;a href=&quot;https://docs.python.org/3/library/subprocess.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess&lt;/code&gt;&lt;/a&gt; module in one of two ways:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;either use the “convenience” function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.run()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;or use the more flexible &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; interface&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;stopping-a-subprocess-on-timeout&quot;&gt;Stopping a subprocess on timeout&lt;/h2&gt;
+
+&lt;p&gt;The “convenience” function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.run()&lt;/code&gt; allows to do quite a number of useful things, such as capturing output, checking the external command’s return code or setting a timeout, among others.&lt;/p&gt;
+
+&lt;p&gt;If we are simply interested in stopping the execution of the external command after a given timeout has been reached, it is sufficient to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.run()&lt;/code&gt; the command and catch the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TimeoutExpired&lt;/code&gt; exception if it is raised:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/path/to/cmd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'arg1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'arg2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# the external command to run
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# how many seconds to wait 
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TimeoutExpired&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Timeout for &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; (&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s) expired'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;stopping-a-subprocess-and-its-children-on-timeout&quot;&gt;Stopping a subprocess and its children on timeout&lt;/h2&gt;
+
+&lt;p&gt;The situation gets more complicated when the external command may launch one or several child processes. In order to be able to stop the child processes as well as the parent, it is necessary to use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; The following only applies to UNIX-like operating systems. (Read: it won’t work on Windows.)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The reason for using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor for this scenario is that it can be instructed to launch a new &lt;em&gt;session&lt;/em&gt; for the external command. Then, the whole &lt;em&gt;process group&lt;/em&gt; belonging to the external command can be terminated on timeout. A &lt;strong&gt;process group&lt;/strong&gt; is simply a group of processes that can be controlled at once (via &lt;a href=&quot;https://en.wikipedia.org/wiki/Signal_(IPC)&quot;&gt;signals&lt;/a&gt;), while a &lt;strong&gt;session&lt;/strong&gt; is a collection of process groups. Here are the official &lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html&quot;&gt;definitions&lt;/a&gt;,  taken from the &lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/9699919799/&quot;&gt;POSIX.1-2008 standard&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;3.296 Process Group&lt;/strong&gt; - A collection of processes that permits the signaling of related processes. Each process in the system is a member of a process group that is identified by a process group ID. A newly created process joins the process group of its creator.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;3.343 Session&lt;/strong&gt; - A collection of process groups established for job control purposes. Each process group is a member of a session. A process is considered to be a member of the session of which its process group is a member. A newly created process joins the session of its creator. A process can alter its session membership; see &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setsid()&lt;/code&gt;. There can be multiple process groups in the same session.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;the-reason-for-using-a-session-instead-of-a-process-group&quot;&gt;The reason for using a session instead of a process group&lt;/h3&gt;
+
+&lt;p&gt;Reading the above definitions, one may wonder why should we bother with creating a new session instead of simply using a new process group for the external command. That’s an excellent question! It is technically possible, but not advisable. In order to create a process group, we’d need to call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.setpgrp()&lt;/code&gt; (which uses the &lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/9699919799/functions/setpgrp.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setpgrp()&lt;/code&gt;&lt;/a&gt; system call). However, there are two problems with this approach:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setpgrp()&lt;/code&gt; is marked as obsolete and may be removed in future versions (check the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;man&lt;/code&gt; page);&lt;/li&gt;
+  &lt;li&gt;the only way to call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.setpgrp()&lt;/code&gt; from within the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor is to pass it to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;preexec_fn&lt;/code&gt; parameter, which is &lt;em&gt;not&lt;/em&gt; thread-safe.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The Python documentation for &lt;a href=&quot;https://docs.python.org/3/library/subprocess.html#subprocess.Popen&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen()&lt;/code&gt;&lt;/a&gt; states the following:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;preexec_fn&lt;/code&gt; parameter is not safe to use in the presence of threads in your application. The child process could deadlock before &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exec&lt;/code&gt; is called. If you must use it, keep it trivial! Minimize the number of libraries you call into.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In the note following the warning, it is mentioned that:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;start_new_session&lt;/code&gt; parameter can take the place of a previously common use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;preexec_fn&lt;/code&gt; to call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.setsid()&lt;/code&gt; in the child.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The workaround, therefore, is to simply create a new session by setting the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;start_new_session&lt;/code&gt; argument of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;True&lt;/code&gt;. According to the Python documentation, it is the equivalent of using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;preexec_fn=os.setsid&lt;/code&gt; (based on the &lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/009604599/functions/setsid.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setsid()&lt;/code&gt;&lt;/a&gt; system call), but without the un-thread-safe warning.&lt;/p&gt;
+
+&lt;h3 id=&quot;implementation&quot;&gt;Implementation&lt;/h3&gt;
+
+&lt;p&gt;With all the above explanations, the implementation is straight-forward:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;signal&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;subprocess&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sys&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'/path/to/cmd'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'arg1'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'arg2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# the external command to run
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# how many seconds to wait 
+&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Popen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start_new_session&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subprocess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TimeoutExpired&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Timeout for &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cmd&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; (&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_s&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s) expired'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Terminating the whole process group...'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stderr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;killpg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getpgid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SIGTERM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; interface is different than that of the convenience &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.run()&lt;/code&gt; function. The timeout needs to be specified in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen.wait()&lt;/code&gt;. If you want to capture &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stdout&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stderr&lt;/code&gt;, you need to pass them to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.PIPE&lt;/code&gt; and then use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen.communicate()&lt;/code&gt;. Regardless of the differences, whatever can be done with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess.run()&lt;/code&gt; can also be achieved with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen&lt;/code&gt; constructor.&lt;/p&gt;
+
+&lt;p&gt;When the timeout set in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Popen.wait()&lt;/code&gt; has elapsed, a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TimeoutExpired&lt;/code&gt; exception is raised. Then, in line 15, we send a SIGTERM to the whole process group (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.killpg()&lt;/code&gt;) of the external command (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os.getpgid(p.pid)&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;That’s it. Happy infanticide! (Err… I was referring to child processes :grin:)&lt;/p&gt;
+
+&lt;h2 id=&quot;further-reading&quot;&gt;Further reading&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/subprocess.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subprocess&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/signal.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;signal&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Signal_(IPC)&quot;&gt;Signals&lt;/a&gt; (Wikipedia)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/9699919799/&quot;&gt;POSIX.1-2008 standard&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html&quot;&gt;POSIX.1-2008 definitions&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Python" /><category term="subprocess" /><category term="timeout" /><category term="python" /><category term="process" /><category term="subprocess" /><category term="signal" /><summary type="html">Suppose a Python script needs to launch an external command. This can be done using the subprocess module in one of two ways:</summary></entry><entry><title type="html">Stopping a Python systemd service cleanly</title><link href="https://alexandra-zaharia.github.io/posts/stopping-python-systemd-service-cleanly/" rel="alternate" type="text/html" title="Stopping a Python systemd service cleanly" /><published>2021-06-26T01:00:00+02:00</published><updated>2021-06-26T01:00:00+02:00</updated><id>https://alexandra-zaharia.github.io/posts/stopping-python-systemd-service-cleanly</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/stopping-python-systemd-service-cleanly/">&lt;p&gt;Suppose you are running a Python systemd service that opens some file descriptors (these can be regular files, named pipes, sockets, and so on). When the service is stopped, it needs to finish cleanly by closing and/or removing the associated resources. This post presents two manners in which the  service may be stopped gracefully.&lt;/p&gt;
+
+&lt;p&gt;First, we will look at how a Python script &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; may be ran as a systemd service. Next, we will discuss the general form of that Python script. Finally, we will see how to stop the service gracefully.&lt;/p&gt;
+
+&lt;h2 id=&quot;running-a-python-script-as-a-systemd-service&quot;&gt;Running a Python script as a systemd service&lt;/h2&gt;
+
+&lt;p&gt;An executable can be made into a systemd service by creating a &lt;em&gt;unit (configuration) file&lt;/em&gt;, also known as a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.service&lt;/code&gt; file (see the &lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.service.html&quot;&gt;systemd.service&lt;/a&gt; man page). The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.service&lt;/code&gt; files are stored in a specific location and have a certain format.&lt;/p&gt;
+
+&lt;h3 id=&quot;unit-file-location&quot;&gt;Unit file location&lt;/h3&gt;
+
+&lt;p&gt;There are actually three places where &lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.unit.html&quot;&gt;unit files&lt;/a&gt; may be stored:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/systemd/system/&lt;/code&gt;: system-specific; take precedence over run-time unit files&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/run/systemd/system/&lt;/code&gt;: run-time; take precedence over default unit files&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/lib/systemd/system/&lt;/code&gt;: default; may be overwritten when the system updates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you create your own systemd service, place the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.service&lt;/code&gt; unit file in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/systemd/system/&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;unit-file-format&quot;&gt;Unit file format&lt;/h3&gt;
+
+&lt;p&gt;A unit file (for a service) has three sections: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[Unit]&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[Service]&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[Install]&lt;/code&gt;. You can read more on &lt;a href=&quot;https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files&quot;&gt;unit file anatomy&lt;/a&gt;. For this example, let us assume a very simple &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my-service.service&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;[Unit]
+Description=My test service
+After=network.target
+
+[Service]
+User=alex
+Type=simple
+ExecStart=/usr/bin/python /home/alex/services/my_service.py
+
+[Install]
+WantedBy=multi-user.target
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;using-the-service&quot;&gt;Using the service&lt;/h3&gt;
+
+&lt;p&gt;First, we need to add the new service and to reload systemd:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nb&quot;&gt;sudo ln&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-sf&lt;/span&gt; ~/services/my-service.service /etc/systemd/system/my-service.service
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;systemctl daemon-reload
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we can enable the service (this way it will be ran each time the system boots) and start it:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;systemctl &lt;span class=&quot;nb&quot;&gt;enable &lt;/span&gt;my-service.service
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;systemctl start my-service.service
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; is configured to log information (and it should!), we can check the system logs with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;journalctl&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;journalctl &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; my-service.service
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Add an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-f&lt;/code&gt; to the previous command if you want to follow the journal as it updates, just like with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tail -f&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-danger-zone&quot;&gt;The danger zone&lt;/h3&gt;
+
+&lt;p&gt;Recall the original assumption: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; opens file descriptors and uses the underlying resources. Whenever the service stops running (through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo systemctl stop my-service.service&lt;/code&gt;, for example), it must do so gracefully by closing the open resources first.&lt;/p&gt;
+
+&lt;p&gt;Before diving into the possible solutions, let us first take a look at the general structure of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; script.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-structure-of-the-python-service&quot;&gt;The structure of the Python service&lt;/h2&gt;
+
+&lt;p&gt;The Python service (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt;) may be a TCP server, client, or any other process that needs to run as a daemon. For the purpose of this example, let us suppose that the service uses a standard event loop and opens a named pipe in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp&lt;/code&gt; to read from it. Instead of doing something useful, our example service will just sleep and then log something when it wakes up. The general structure is as follows (possible exceptions from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;os&lt;/code&gt; module are not caught for brevity purposes):&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sys&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;time&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'/tmp/myservice_pipe'&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delay&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_init_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delay&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delay&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mkfifo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fifo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;O_RDWR&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;O_NONBLOCK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'MyService instance created'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_init_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StreamHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'%(levelname)8s | %(message)s'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sleep&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;delay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Tick'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;KeyboardInterrupt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Keyboard interrupt (SIGINT) received...'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Cleaning up...'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fifo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FIFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Named pipe removed'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Named pipe not found, nothing to clean up'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;service&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;service&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; is ran in a terminal, we can stop it by hitting Ctrl+C (registered as SIGINT):&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;python test_service.py 
+    INFO | MyService instance created
+    INFO | Tick
+    INFO | Tick
+^C WARNING | Keyboard interrupt (SIGINT) received...
+    INFO | Cleaning up...
+    INFO | Named pipe removed
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;how-to-stop-the-python-service-gracefully&quot;&gt;How to stop the Python service gracefully&lt;/h2&gt;
+
+&lt;p&gt;In the previous section we’ve seen that the named pipe is removed as expected if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; is executed in a console. However, if we run it as a systemd service, stopping it via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemctl&lt;/code&gt; will result in an improper shutdown of our service: the named pipe is not removed :scream:&lt;/p&gt;
+
+&lt;p&gt;This happens because, by default, the kill signal sent by systemd when using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemctl stop&lt;/code&gt; is SIGTERM, not SIGINT, therefore we cannot catch it as a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;KeyboardInterrupt&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here are two solutions for this problem.&lt;/p&gt;
+
+&lt;h3 id=&quot;use-sigint-instead-of-sigterm&quot;&gt;Use SIGINT instead of SIGTERM&lt;/h3&gt;
+
+&lt;p&gt;The most immediate solution is to instruct systemd to send a SIGINT (registered as a keyboard interrupt) instead of the default SIGTERM. This is done by adding the following line to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[Service]&lt;/code&gt; section of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my-service.service&lt;/code&gt; unit file:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;KillSignal=SIGINT
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This way, whenever we stop or restart the service with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemctl&lt;/code&gt;, the signal sent to kill &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my_service.py&lt;/code&gt; is SIGINT and it is caught by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;except&lt;/code&gt; block in lines 32-34.&lt;/p&gt;
+
+&lt;h3 id=&quot;use-a-sigterm-handler&quot;&gt;Use a SIGTERM handler&lt;/h3&gt;
+
+&lt;p&gt;The other solution is to register a signal handler for SIGTERM. For this, we will need to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import signal&lt;/code&gt; and instruct Python to do something useful when receiving a SIGTERM. We add the following method to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MyService&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;_handle_sigterm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frame&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'SIGTERM received...'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Note the two arguments &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sig&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;frame&lt;/code&gt;: although not used explicitly, they must be present because this is the method that we will register for handling SIGTERM. If they are absent we get a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TypeError&lt;/code&gt; when a SIGTERM is received. We add the following line to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__init__()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;        &lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SIGTERM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_handle_sigterm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If we check the system log with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;journalctl -u my-service.service&lt;/code&gt; we see the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;juin 26 18:35:17 phantom systemd[1]: Started My test service.
+juin 26 18:35:17 phantom python[558725]:     INFO | MyService instance created
+juin 26 18:35:22 phantom python[558725]:     INFO | Tick
+juin 26 18:35:27 phantom python[558725]:     INFO | Tick
+juin 26 18:35:32 phantom python[558725]:  WARNING | SIGTERM received...
+juin 26 18:35:32 phantom python[558725]:     INFO | Cleaning up...
+juin 26 18:35:32 phantom python[558725]:     INFO | Named pipe removed
+juin 26 18:35:32 phantom systemd[1]: Stopping My test service...
+juin 26 18:35:32 phantom systemd[1]: test-service.service: Succeeded.
+juin 26 18:35:32 phantom systemd[1]: Stopped My test service.
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;That’s it! You can now use either of the two methods to stop your Python systemd service gracefully: either tell systemd to kill it with a SIGINT or, better yet, install a custom SIGTERM handler.&lt;/p&gt;
+
+&lt;p&gt;There’s a caveat with both approaches if the service launches more than one process. The &lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.kill.html&quot;&gt;systemd.kill&lt;/a&gt; man page explains that by default (when &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;KillMode=control-group&lt;/code&gt;) all the processes launched by the unit file will receive SIGTERM (or SIGINT if we use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;KillSignal=SIGINT&lt;/code&gt; as explained here). However, if they fail to stop, they will be knocked-out with SIGKILL. In such situations, one should be extra-careful with proper shutdown and cleanup.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-reading&quot;&gt;Further reading&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.service.html&quot;&gt;systemd.service man page&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.unit.html&quot;&gt;systemd.unit man page&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files&quot;&gt;Anatomy of a systemd unit file&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.freedesktop.org/software/systemd/man/systemd.kill.html&quot;&gt;systemd.kill man page&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Python" /><category term="systemd" /><category term="python" /><category term="systemd" /><category term="service" /><summary type="html">Suppose you are running a Python systemd service that opens some file descriptors (these can be regular files, named pipes, sockets, and so on). When the service is stopped, it needs to finish cleanly by closing and/or removing the associated resources. This post presents two manners in which the service may be stopped gracefully.</summary></entry><entry><title type="html">How to fix Python logger printing the same entry multiple times</title><link href="https://alexandra-zaharia.github.io/posts/fix-python-logger-printing-same-entry-multiple-times/" rel="alternate" type="text/html" title="How to fix Python logger printing the same entry multiple times" /><published>2021-06-24T00:00:00+02:00</published><updated>2021-06-26T12:36:51+02:00</updated><id>https://alexandra-zaharia.github.io/posts/fix-python-logger-printing-same-entry-multiple-times</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/fix-python-logger-printing-same-entry-multiple-times/">&lt;p&gt;The &lt;a href=&quot;/posts/make-your-own-custom-color-formatter-with-python-logging/&quot;&gt;previous post&lt;/a&gt; explained how to get a simple colored formatter for your custom logger using the Python &lt;a href=&quot;https://docs.python.org/3/library/logging.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;&lt;/a&gt; module. This one explains why a logger may print the same record multiple times, and how to fix this.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-scenario&quot;&gt;The scenario&lt;/h2&gt;
+
+&lt;p&gt;Let us suppose you already have the logger from the &lt;a href=&quot;/posts/make-your-own-custom-color-formatter-with-python-logging/&quot;&gt;previous post&lt;/a&gt; up and running. Now, the idea is to share it across several modules and/or classes.&lt;/p&gt;
+
+&lt;p&gt;Suppose your logger is defined in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logger.py&lt;/code&gt; as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# Create custom logger logging all five levels 
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# Define format for logs
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'%(asctime)s | %(levelname)8s | %(filename)s:%(lineno)2d | %(message)s'&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# Create stdout handler for logging to the console (logs all five levels)
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StreamHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CustomFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# Create file handler for logging to a file (logs all five levels)
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;today&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'my_app_{}.log'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strftime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'%Y_%m_%d'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# Add both handlers to the logger
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Suppose you also have a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;module.py&lt;/code&gt; where you define three classes, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;A&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;B&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;C&lt;/code&gt;, each one using the same logger:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_logger&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class A'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class B'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class C'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;the-problem&quot;&gt;The problem&lt;/h2&gt;
+
+&lt;p&gt;The problem is immediately apparent when running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;module.py&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;2021-06-24 00:38:02,055 |  WARNING | module.py: 7 | This is from class A
+2021-06-24 00:38:02,055 |  WARNING | module.py:13 | This is from class B
+2021-06-24 00:38:02,055 |  WARNING | module.py:13 | This is from class B
+2021-06-24 00:38:02,055 |  WARNING | module.py:19 | This is from class C
+2021-06-24 00:38:02,055 |  WARNING | module.py:19 | This is from class C
+2021-06-24 00:38:02,055 |  WARNING | module.py:19 | This is from class C
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Instead of one log record for each of the three classes, we get one for class &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;A&lt;/code&gt; as expected, but two for class &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;B&lt;/code&gt; and three for class &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;C&lt;/code&gt;. :confounded:&lt;/p&gt;
+
+&lt;h2 id=&quot;why-does-this-happen&quot;&gt;Why does this happen?&lt;/h2&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://docs.python.org/3/library/logging.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;&lt;/a&gt; documentation ensures us that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging.getLogger()&lt;/code&gt; returns the same logger instance each time this function is called:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;All calls to this function with a given name return the same logger instance. This means that logger instances never need to be passed between different parts of an application.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;So why does this happen? The answer is that although we get the same &lt;em&gt;logger&lt;/em&gt;, each time we call our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_logger()&lt;/code&gt; function from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logger.py&lt;/code&gt; we are actually attaching distinct &lt;em&gt;handlers&lt;/em&gt; to it.&lt;/p&gt;
+
+&lt;h2 id=&quot;two-solutions&quot;&gt;Two solutions&lt;/h2&gt;
+
+&lt;p&gt;Don’t worry, there are two fixes for this problem. In both cases we get only one printed line per record, as expected:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;2021-06-24 00:51:40,057 |  WARNING | module.py: 7 | This is from class A
+2021-06-24 00:51:40,057 |  WARNING | module.py:13 | This is from class B
+2021-06-24 00:51:40,057 |  WARNING | module.py:19 | This is from class C
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;import-the-same-logger-every-time&quot;&gt;Import the same logger every time&lt;/h3&gt;
+
+&lt;p&gt;We can simply create the logger in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logger.py&lt;/code&gt; and import it directly in our module, without ever having to call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_logger()&lt;/code&gt;. Here is how &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logger.py&lt;/code&gt; changes:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Everything is just as before, except that we create the logger in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logger.py&lt;/code&gt; (it’s a global variable, yes, I know).&lt;/p&gt;
+
+&lt;p&gt;And here is how &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;module.py&lt;/code&gt; changes:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class A'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class B'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is from class C'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We just use the same variable in each of the three classes and the problem goes away, since no unnecessary handlers are created. However, this solution is not ideal since it involves (potentially many) modifications, and furthermore we can’t be sure that in two months from now we’ll still remember that we were not supposed to call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_logger()&lt;/code&gt; directly.&lt;/p&gt;
+
+&lt;h3 id=&quot;check-if-handlers-are-present&quot;&gt;Check if handlers are present&lt;/h3&gt;
+&lt;p&gt;The best solution is to check whether any handlers are already attached before adding them to the logger. This fix only involves changing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging.py&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hasHandlers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Problem fixed. Happy logging!&lt;/p&gt;
+
+&lt;h2 id=&quot;further-reading&quot;&gt;Further reading&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/logging.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://realpython.com/python-logging/&quot;&gt;Python &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt; tutorial at Real Python&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Python" /><category term="logging" /><category term="python" /><category term="logging" /><summary type="html">The previous post explained how to get a simple colored formatter for your custom logger using the Python logging module. This one explains why a logger may print the same record multiple times, and how to fix this.</summary></entry><entry><title type="html">Make your own custom color formatter with Python logging</title><link href="https://alexandra-zaharia.github.io/posts/make-your-own-custom-color-formatter-with-python-logging/" rel="alternate" type="text/html" title="Make your own custom color formatter with Python logging" /><published>2021-06-23T01:00:00+02:00</published><updated>2021-06-26T12:36:51+02:00</updated><id>https://alexandra-zaharia.github.io/posts/make-your-own-custom-color-formatter-with-python-logging</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/make-your-own-custom-color-formatter-with-python-logging/">&lt;h2 id=&quot;logging&quot;&gt;Logging&lt;/h2&gt;
+
+&lt;p&gt;There comes a time in the life of a Python package when proper logs beat &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print()&lt;/code&gt;ing to standard output :smiley: The standard Python library offers the versatile &lt;a href=&quot;https://docs.python.org/3/library/logging.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;&lt;/a&gt; module, and if that does not fit your needs there’s this elegant package called &lt;a href=&quot;https://github.com/Delgan/loguru&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;loguru&lt;/code&gt;&lt;/a&gt;. In this article I will only be addressing the standard library &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;This &lt;a href=&quot;https://realpython.com/python-logging/&quot;&gt;tutorial&lt;/a&gt; explains how to get up and running with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;. You basically have the choice between the basic logging configuration and creating your own custom logger, more easily adapted to meet your specific requirements.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-scenario&quot;&gt;The scenario&lt;/h2&gt;
+
+&lt;p&gt;Let us suppose you need to log both to standard output and to a file. Furthermore, you want your console output to be colored. If your intention is to &lt;strong&gt;avoid bringing new dependencies to your project&lt;/strong&gt; (otherwise you’d use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;loguru&lt;/code&gt;, or at the very least &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;colorama&lt;/code&gt;), you can do this with a bare-bones custom &lt;a href=&quot;https://docs.python.org/3/library/logging.html#logging.Formatter&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging.Formatter&lt;/code&gt;&lt;/a&gt; class and with &lt;a href=&quot;https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html&quot;&gt;ANSI escape codes&lt;/a&gt;. Sounds fun? Let’s dive right in.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-logger&quot;&gt;The logger&lt;/h3&gt;
+
+&lt;p&gt;Here is what your logger might look like:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;logging&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Create custom logger logging all five levels 
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Define format for logs
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'%(asctime)s | %(levelname)8s | %(message)s'&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Create stdout handler for logging to the console (logs all five levels)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StreamHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CustomFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Create file handler for logging to a file (logs all five levels)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;today&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FileHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'my_app_{}.log'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;today&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strftime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'%Y_%m_%d'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setLevel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Add both handlers to the logger
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stdout_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;First, we create a custom logger (line 5) and set it to log everything (line 6, from debug through critical messages).
+Every log record should display the time and date, the message level and the message (line 9). Notice that we align the message level on 8 characters (this way the five possible strings for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;levelname&lt;/code&gt;, namely DEBUG, INFO, WARNING, ERROR and CRITICAL are all right-aligned).&lt;/p&gt;
+
+&lt;p&gt;Next, we set up two handlers, one for console output (lines 12-14) and the other one for logging to a file (lines 17-20). Both handlers log all five levels of messages and both use the log format we’ve just discussed. The file handler creates a new log file every day and names it appropriately (lines 17-18). However, the console handler should have the ability to print every level in a distinct color, which is why we will be using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CustomFormatter&lt;/code&gt; class presented below.&lt;/p&gt;
+
+&lt;p&gt;Finally, in lines 23-24, we add the two handlers to our logger and we’re ready to go.&lt;/p&gt;
+
+&lt;h3 id=&quot;a-custom-color-formatter&quot;&gt;A custom color formatter&lt;/h3&gt;
+
+&lt;p&gt;For building our own custom formatter, we will extend the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging.Formatter&lt;/code&gt; class, give it the log format we want, and instruct it to print out each message level in a distinct color. ANSI escape codes for 8-color, 16-color and 256-color terminals may be found &lt;a href=&quot;https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here is how my custom color formatter looks like:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CustomFormatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;Logging colored formatter, adapted from https://stackoverflow.com/a/56944256/3638629&quot;&quot;&quot;&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;grey&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[38;21m'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;blue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[38;5;39m'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;yellow&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[38;5;226m'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;red&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[38;5;196m'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;bold_red&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[31;1m'&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\x1b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;[0m'&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;nb&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FORMATS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DEBUG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grey&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;INFO&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;blue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WARNING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;yellow&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ERROR&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;red&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CRITICAL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bold_red&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reset&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;log_fmt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FORMATS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;levelno&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;formatter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;logging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log_fmt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;formatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And here it is in practice:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is a debug-level message'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is an info-level message'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;warning&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is a warning-level message'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is an error-level message'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;critical&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'This is a critical-level message'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/colored_logging.png&quot; alt=&quot;Colored logging output&quot; width=&quot;600&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The ANSI escape codes can obviously be substituted with &lt;a href=&quot;https://pypi.org/project/colorama/&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;colorama&lt;/code&gt;&lt;/a&gt;, if extra dependencies are not an issue.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-reading&quot;&gt;Further reading&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://docs.python.org/3/library/logging.html&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt;&lt;/a&gt; (Python documentation)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://realpython.com/python-logging/&quot;&gt;Python &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logging&lt;/code&gt; tutorial at Real Python&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html&quot;&gt;ANSI escape codes for colored terminal output&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Python" /><category term="logging" /><category term="python" /><category term="logging" /><category term="formatter" /><summary type="html">Logging</summary></entry><entry><title type="html">Autofocus of the Logitech C920 webcam in Linux</title><link href="https://alexandra-zaharia.github.io/posts/autofocus-of-the-logitech-c920-webcam-in-linux/" rel="alternate" type="text/html" title="Autofocus of the Logitech C920 webcam in Linux" /><published>2021-02-26T22:43:00+01:00</published><updated>2021-02-26T23:24:14+01:00</updated><id>https://alexandra-zaharia.github.io/posts/autofocus-of-the-logitech-c920-webcam-in-linux</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/autofocus-of-the-logitech-c920-webcam-in-linux/">&lt;p&gt;&lt;img src=&quot;/assets/img/posts/logitech_c920.jpg&quot; alt=&quot;Logitech C920 HD Pro&quot; width=&quot;400&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In a &lt;a href=&quot;/posts/getting-the-most-out-of-your-webcam-on-linux/&quot;&gt;previous post&lt;/a&gt; I wrote about how I set up my webcam on Linux. It turned out it was actually suffering from random disconnects which made it very unreliable for professional video calls. I also couldn’t get more than 0.5 fps if I recorded with it, so I switched to the (very expensive for what it’s worth) Logitech C920 HD Pro.&lt;/p&gt;
+
+&lt;h2 id=&quot;too-expensive&quot;&gt;Too expensive&lt;/h2&gt;
+
+&lt;p&gt;The Logitech C920 does have its advantages:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;It works on Linux out of the box&lt;/li&gt;
+  &lt;li&gt;It doesn’t seem to randomly disconnect (so far)&lt;/li&gt;
+  &lt;li&gt;Allows recording 1080p at 30 fps&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But apart form that I actually find its video sensor inferior to that of the cheap Chinese webcam:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The contrast is off no matter what I do&lt;/li&gt;
+  &lt;li&gt;The colors seem artificial (although with enough tuning of the saturation and white balance temperature you can get something decent)&lt;/li&gt;
+  &lt;li&gt;The viewing angle is large, not extra large&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It also lacks some features with respect to the cheap Chinese webcam:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;It doesn’t swivel (if you want to rotate it, you have to rotate your screen)&lt;/li&gt;
+  &lt;li&gt;It doesn’t come with a privacy shutter&lt;/li&gt;
+  &lt;li&gt;It doesn’t come with a tripod&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But I guess this is the “package” you get when buying into a “reputable” brand like Logitech… anyway, I digress. The real issue is…&lt;/p&gt;
+
+&lt;h2 id=&quot;bad-autofocus&quot;&gt;Bad autofocus&lt;/h2&gt;
+
+&lt;p&gt;The autofocus on this webcam is horrible! I did myself a favor and promptly turned it off. With the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v4l-utils&lt;/code&gt; package installed, do this (assuming your Logitech C920 is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/video0&lt;/code&gt;):&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;v4l2-ctl -d /dev/video0 --set-ctrl=focus_auto=0
+v4l2-ctl -d /dev/video0 --set-ctrl=focus_absolute=0
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the above lines to a script to run automatically each time you log in (put it in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/profile&lt;/code&gt; or add it as one of the scripts to run in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/profile.d/&lt;/code&gt;). If the image is not sharp enough, you can also alter the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sharpness&lt;/code&gt; parameter (see below).&lt;/p&gt;
+
+&lt;h2 id=&quot;other-settings&quot;&gt;Other settings&lt;/h2&gt;
+
+&lt;p&gt;To see the other settings that are available for the Logitech C920 webcam:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;v4l2-ctl -d /dev/video0 --list-ctrls-menus
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You can manually tune the brightness, contrast, saturation, white balance temperature, sharpness, exposure and gain settings with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v4l2-ctl&lt;/code&gt;. The pan and tilt don’t seem to work.&lt;/p&gt;
+
+&lt;p&gt;If you need a graphical user interface, you can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;guvcview&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;All in all it’s not a bad webcam. I just wish the sensor was as powerful as the one in the Chinese webcam but without its stability (random disconnect) issue.&lt;/p&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Linux" /><category term="webcam" /><category term="linux" /><category term="webcam" /><summary type="html"></summary></entry><entry><title type="html">Mercurial branch how-to</title><link href="https://alexandra-zaharia.github.io/posts/mercurial-branch-howto/" rel="alternate" type="text/html" title="Mercurial branch how-to" /><published>2021-02-17T23:30:00+01:00</published><updated>2021-02-17T23:30:00+01:00</updated><id>https://alexandra-zaharia.github.io/posts/mercurial-branch-howto</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/mercurial-branch-howto/">&lt;p&gt;This is a quick how-to on &lt;em&gt;named&lt;/em&gt; branches in Mercurial. Be sure to check out the official documentation on branches on the &lt;a href=&quot;https://www.mercurial-scm.org/wiki/Branch&quot;&gt;Mercurial wiki&lt;/a&gt;, the visual explanation on the different types of branches by &lt;a href=&quot;https://stevelosh.com/blog/2009/08/a-guide-to-branching-in-mercurial/&quot;&gt;Steve Losh&lt;/a&gt; and the named branches tutorial by &lt;a href=&quot;https://markheath.net/post/using-named-branches-in-mercurial&quot;&gt;Mark Heath&lt;/a&gt; first.&lt;/p&gt;
+
+&lt;p&gt;So now that you concluded that clones and bookmarks are not the solution to your branching problem, you want to create a named branch. For the purpose of this example, assume the new branch is called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;creating-a-named-branch&quot;&gt;Creating a named branch&lt;/h2&gt;
+
+&lt;p&gt;If you want to branch from a previous changeset, update to that revision number first. Suppose you’re at revision 10 and you want to branch from revision 5:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg up 5
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now you’re still on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; branch but you just went back in time from revision 10 to revision 5.&lt;/p&gt;
+
+&lt;p&gt;It’s time to create the new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch. It will be created from the current changeset if you haven’t used &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hg up&lt;/code&gt; as above:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg branch dev
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When a branch is created, it automatically becomes the current one. You can check this if you want with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hg branch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The list of existing branches is viewable with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hg branches&lt;/code&gt;. However, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch will not be listed there as long as there are no commits to it. So change something, then commit. Now &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hg log&lt;/code&gt; shows your new commit as being on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch.&lt;/p&gt;
+
+&lt;h2 id=&quot;switching-branches&quot;&gt;Switching branches&lt;/h2&gt;
+
+&lt;p&gt;If you want to go back to the default branch, use:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg up default
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Change something there, commit, then come back to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg up dev
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;What happens if you want to switch branches when your current branch contains &lt;strong&gt;uncommitted changes&lt;/strong&gt;? Mercurial does not allow this. You can either use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shelve&lt;/code&gt; extension or create a patch. I’m going with the patch solution. If we’re on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch with uncommitted changes, here is how to create a patch before switching to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; branch:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg diff &amp;gt; dev.patch
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In order to switch, we must tell Mercurial to discard uncommitted changes (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-C&lt;/code&gt;), which is OK since we’ve already saved them as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev.patch&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg up -C default
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When going back from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch, we need to import the uncommitted changes:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg up dev
+hg import --no-commit dev.patch
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;viewing-the-differences&quot;&gt;Viewing the differences&lt;/h2&gt;
+
+&lt;p&gt;To view the differences between two branches &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;branch1&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;branch2&lt;/code&gt;, use:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg diff -r branch1:branch2
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If we only have two branches (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; in our example), we can exclude the current branch. Suppose we’re on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch and we want to see the differences with respect to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg diff -r default
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If we are only interested in differences between two branches for a particular &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg diff -r branch1:branch2 file
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For our example, we are on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dev&lt;/code&gt; branch and we want to see how &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file&lt;/code&gt; differs with respect to the same file in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; branch:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;hg diff -r default file
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s all! Happy branching!&lt;/p&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Tools" /><category term="Mercurial" /><category term="mercurial" /><category term="version control" /><summary type="html">This is a quick how-to on named branches in Mercurial. Be sure to check out the official documentation on branches on the Mercurial wiki, the visual explanation on the different types of branches by Steve Losh and the named branches tutorial by Mark Heath first.</summary></entry><entry><title type="html">Fix the look of KDE apps in other desktop environments</title><link href="https://alexandra-zaharia.github.io/posts/fix-kde-theme-in-xfce-gnome/" rel="alternate" type="text/html" title="Fix the look of KDE apps in other desktop environments" /><published>2021-02-15T19:30:00+01:00</published><updated>2021-02-15T19:30:00+01:00</updated><id>https://alexandra-zaharia.github.io/posts/fix-kde-theme-in-xfce-gnome</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/fix-kde-theme-in-xfce-gnome/">&lt;h2 id=&quot;the-problem&quot;&gt;The problem&lt;/h2&gt;
+
+&lt;p&gt;Ever re-installed your OS but kept your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home&lt;/code&gt; partition and got to experience some weird visual artifacts? If your desktop environment is XFCE for instance and your KDE apps (such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;okular&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;konsole&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;spectacle&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gwenview&lt;/code&gt;) look bad, then you’d normally solve this with &lt;a href=&quot;https://store.kde.org/p/1005410/&quot;&gt;Kvantum Manager&lt;/a&gt;. Kvantum is used for styling Qt apps. It worked great out of the box for the Manjaro clean installs I’ve done so far, but the same cannot be said about the latest (re-) install where I just kept my &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home&lt;/code&gt; partition and installed Manjaro onto a brand new SSD.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-solution&quot;&gt;The solution&lt;/h2&gt;
+
+&lt;p&gt;Again, out of the box, Kvantum Manager works great… until it doesn’t. I might have forgotten to install a particular Qt theme. Instead of tracking down that particular package, an alternative solution is to install &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;qt5ct&lt;/code&gt;. As explained on this Arch Linux &lt;a href=&quot;https://wiki.archlinux.org/index.php/qt#Configuration_of_Qt5_apps_under_environments_other_than_KDE_Plasma&quot;&gt;wiki page&lt;/a&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;qt5ct&lt;/code&gt; provides another way to style KDE apps from within a desktop environment other than KDE. So this should work for XFCE, as well as Gnome and what have you.&lt;/p&gt;
+
+&lt;p&gt;Just install it:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;pacman &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; qt5ct
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, you need to make an environment variable available globally to specify that it is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;qt5ct&lt;/code&gt; that should be used as the Qt platform abstraction. This can be achieved by adding the following line to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/profile&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;QT_QPA_PLATFORMTHEME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;qt5ct
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now launch &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;qt5ct&lt;/code&gt; and select the desired theme.&lt;/p&gt;
+
+&lt;p&gt;Log out and log in again and your KDE apps should now be better integrated visually into your non-KDE desktop environment.&lt;/p&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Linux" /><category term="desktop environment" /><category term="xfce" /><category term="kde" /><category term="qt5" /><summary type="html">The problem</summary></entry><entry><title type="html">Learning Unreal Engine 4: Dungeon prison breakout</title><link href="https://alexandra-zaharia.github.io/posts/learning-ue4-dungeon-prison-breakout/" rel="alternate" type="text/html" title="Learning Unreal Engine 4: Dungeon prison breakout" /><published>2021-01-28T19:00:00+01:00</published><updated>2021-01-28T19:00:00+01:00</updated><id>https://alexandra-zaharia.github.io/posts/learning-ue4-dungeon-prison-breakout</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/learning-ue4-dungeon-prison-breakout/">&lt;p&gt;&lt;img src=&quot;/assets/img/posts/dungeon_prison_breakout.png&quot; alt=&quot;Dungeon prison breakout demo level&quot; width=&quot;800&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The whole &lt;a href=&quot;https://en.wikipedia.org/wiki/Mass_Effect&quot;&gt;Mass Effect&lt;/a&gt; trilogy was made using Unreal Engine 3! &lt;em&gt;‘Nuff said!&lt;/em&gt; I guess I’ll be
+learning Unreal Engine 4, then :grin: No, wait. The real reason is that, unlike Unity, UE4 runs on 
+Linux. But none of this would matter if I wasn’t dead curious about game engines to start off, which I am.&lt;/p&gt;
+
+&lt;p&gt;I chose to embark on this journey with the Udemy &lt;a href=&quot;https://www.udemy.com/course/unrealcourse/&quot;&gt;Unreal Engine C++ Developer&lt;/a&gt; course 
+by Ben Tristem and the GameDev.tv team. Of course this is just to get one’s fingers dipped. 
+In order to have a better understanding of game development, you’d need a lot more than 
+just a single course:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;solid grasp on game design principles and game mechanics&lt;/li&gt;
+  &lt;li&gt;level design&lt;/li&gt;
+  &lt;li&gt;specific to 3D games: 3D modelling and sculpting (e.g. Blender), 3D environments&lt;/li&gt;
+  &lt;li&gt;specific to Unreal Engine 4: be able to use both C++ and blueprints&lt;/li&gt;
+  &lt;li&gt;character animation&lt;/li&gt;
+  &lt;li&gt;visual and sound effects&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;And if you ever plan on going the solo route, on top of those technical skills you’d need to 
+create and manage your indie game dev studio, as well as to effectively market your games.&lt;/p&gt;
+
+&lt;p&gt;As far as I’m concerned, I have zero intention of going that way. I’m just curious about game 
+development in general and fascinated by what can be achieved. After so much time of dissecting how 
+video games are built, I just thought I’d take a crack at building something myself.&lt;/p&gt;
+
+&lt;h2 id=&quot;enter-ue4&quot;&gt;Enter UE4&lt;/h2&gt;
+
+&lt;p&gt;Despite being so powerful and versatile, it is alas very poorly documented! But since I’m dead set on using Linux and I refuse to learn Godot as my first game engine, Unreal Engine 4 is my only option. I’ll figure it out along the way, right? &lt;em&gt;…right?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;I went more than halfway through the Udemy course when I got my first real challenge: using what I 
+had just learned to make an actually playable demo level. So what exactly had I learned?&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The course starts off by explaining how to set up Unreal Engine 4.&lt;/li&gt;
+  &lt;li&gt;Then a cursory introduction to C++ takes place in the form of speeding you through writing a simple console application.&lt;/li&gt;
+  &lt;li&gt;The first actual contact with the Unreal Editor is through a console-based game that is actually 
+implemented in a virtual terminal inside a 3D environment.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;“Building escape”&lt;/strong&gt;. This is the chapter for which I made the demo below. It’s also the real 
+introductory chapter to Unreal Engine 4, teaching you:
+    &lt;ul&gt;
+      &lt;li&gt;The basics of Unreal classes and components&lt;/li&gt;
+      &lt;li&gt;What static meshes are&lt;/li&gt;
+      &lt;li&gt;How to build basic geometry using BSP&lt;/li&gt;
+      &lt;li&gt;How to set up basic lighting&lt;/li&gt;
+      &lt;li&gt;What collision is&lt;/li&gt;
+      &lt;li&gt;How to create a grab/release component for the default pawn&lt;/li&gt;
+      &lt;li&gt;How to create a basic actor component with a precise role (e.g. for opening and closing a door)&lt;/li&gt;
+      &lt;li&gt;How to add basic sound effects&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;building-escape-final-challenge&quot;&gt;Building escape final challenge&lt;/h2&gt;
+
+&lt;p&gt;The Udemy course then sends you off spiraling into the dark abyss, giving you the challenge to create an actual playable level, as polished as you want it to be. Challenge accepted!&lt;/p&gt;
+
+&lt;h3 id=&quot;game-design&quot;&gt;Game design&lt;/h3&gt;
+
+&lt;p&gt;The level is supposed to have the player solve a series of puzzles by manipulating objects in the game environment in order to escape an enclosed space. My choice of asset pack went with the &lt;a href=&quot;https://www.unrealengine.com/marketplace/en-US/product/a5b6a73fea5340bda9b8ac33d877c9e2&quot;&gt;Medieval Dungeon&lt;/a&gt; pack from the Unreal Marketplace. This resulted in creating a sadistic dungeon prison environment from which the player must free herself.&lt;/p&gt;
+
+&lt;p&gt;The player can exit the dungeon by placing four “magic cubes” in the appropriate locations, as well as a “magic crystal”. When all of the five items are in place, the dungeon doors open and the game is over.&lt;/p&gt;
+
+&lt;h3 id=&quot;my-demo-level&quot;&gt;My demo level&lt;/h3&gt;
+
+&lt;p&gt;Here is the Youtube link to the playable level:&lt;/p&gt;
+
+&lt;figure class=&quot;video_container&quot;&gt;
+  &lt;iframe width=&quot;700&quot; height=&quot;395&quot; src=&quot;https://www.youtube.com/embed/18r5_2hjHUo&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+&lt;/figure&gt;
+
+&lt;h3 id=&quot;level-design&quot;&gt;Level design&lt;/h3&gt;
+
+&lt;p&gt;Below is a simplified level design document for the dungeon prison breakout level (most of the props are not shown). The player starts in the prison cell located in the bottom right corner of the map:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/dungeon_prison_breakout_level_design_labels.jpg&quot; alt=&quot;Minimalist level design&quot; width=&quot;800&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With the help of this document, I will attempt to explain how the level plays. In order to get the cubes and the crystal, the player goes through a certain number of interactions:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;In the prison cell where the player first finds herself, two wooden planks must be moved to uncover a magic cube. This magic cube activates a pressure plate that opens the gate of the prison cell.&lt;/li&gt;
+  &lt;li&gt;A magic cube is out in the open in the “main hall”, where four statues have empty statue stands in front of them; when a cube is placed on the correct empty statue stand, the corresponding statue is “activated” with a sound, a particle effect and a light source.&lt;/li&gt;
+  &lt;li&gt;Another cube can be found inside a wooden coffin in the torture hall, right in front of the prison cells.&lt;/li&gt;
+  &lt;li&gt;In the memorial chamber (accessible through the main hall), a ceramic pot may be moved in order to uncover a key. The key opens one of the remaining prison cells.&lt;/li&gt;
+  &lt;li&gt;Entering this prison cell, a big stone can be moved in order to gain access to the adjacent cell. From the adjacent cell the player climbs on a platform that allows a jump to the final prison cell. In this last prison cell, two small stones can be used to activate the pressure plate that opens the gate of the prison cell, and a magic cube may be dragged outside of the cell along the way.&lt;/li&gt;
+  &lt;li&gt;The big stone in the cell that can be opened with the key can be exchanged with the cube on the pressure plate in the player’s cell. Now all the four cubes should be in place on the initially empty statue stands in front of the statues in the main hall.&lt;/li&gt;
+  &lt;li&gt;The last key to the puzzle is a crystal that must be placed on a fifth statue stand in the middle of the four stands with the magic cubes. The crystal can be accessed by removing the stone coffin lids in the mortuary chamber, accessible through the main hall.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;my-learning-challenges&quot;&gt;My learning challenges&lt;/h2&gt;
+
+&lt;p&gt;While building this level I came across some interesting challenges. Most of them involve blueprints, an alien visual scripting language designed to torment the souls of UE4 newbies. At times it’s frustrating as I feel like I have no idea what I’m doing :stuck_out_tongue_winking_eye:&lt;/p&gt;
+
+&lt;h3 id=&quot;outline-for-interactive-items&quot;&gt;Outline for interactive items&lt;/h3&gt;
+
+&lt;p&gt;I wanted to guide the player by giving her a visual cue for objects that she can interact with. The idea is to use a custom depth stencil value and a post-processing volume. Every interactive object has its own blueprint. There are actually two distinct custom stencil values that I use, because I wanted to make the key really stand out since it is very small. I used &lt;a href=&quot;https://www.youtube.com/watch?v=YVTcH6da32Y&amp;amp;list=PLtP1toxty8o27kpPPLyfqLIr27ZRDFRq7&amp;amp;index=6&amp;amp;ab_channel=wizvanmeter&quot;&gt;this tutorial&lt;/a&gt; to get started.&lt;/p&gt;
+
+&lt;h3 id=&quot;flexible-c-components-for-doors&quot;&gt;Flexible C++ components for doors&lt;/h3&gt;
+
+&lt;p&gt;I wanted to have doors open and close according to a variety of conditions and behave a certain number of ways, for example:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Once open, some doors must remain that way (the gate to the prison cell in the middle).&lt;/li&gt;
+  &lt;li&gt;Some doors are activated by the player pawn (the doors to the mortuary and the memorial chambers).&lt;/li&gt;
+  &lt;li&gt;Some doors are activated by another actor (the key for the gate to the prison cell in the middle).&lt;/li&gt;
+  &lt;li&gt;Some doors are activated by the total mass on the pressure plate (the gate to the player’s prison cell).&lt;/li&gt;
+  &lt;li&gt;Some doors are activated by the presence of several actors in a single trigger volume (the gate to the last prison cell).&lt;/li&gt;
+  &lt;li&gt;Some doors are activated by the presence of several actors in several trigger volumes (the gates for the dungeon’s exit need the four cubes and the crystal in place).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I achieved this by exposing many variables to the Unreal Editor and by adopting a modular class design. The base class implements basic behavior (opens and closes a door at a given angle and speed). It is extended by two derived classes that describe how certain actors are expected to trigger the conditions for controlling the door.&lt;/p&gt;
+
+&lt;h3 id=&quot;first-contact-with-particle-systems&quot;&gt;First contact with particle systems&lt;/h3&gt;
+
+&lt;p&gt;I created a very simple particle system following &lt;a href=&quot;https://www.youtube.com/watch?v=5xUENgiGrRw&amp;amp;list=PLtP1toxty8o27kpPPLyfqLIr27ZRDFRq7&amp;amp;index=9&amp;amp;ab_channel=DeanAshford&quot;&gt;this tutorial&lt;/a&gt;. Its role is to emphasize that the cubes and the crystal have been placed in the proper locations. The particle system is handled by a C++ component that I attach to the static meshes that must be emphasized. In order to activate the particle system when the right conditions are met, I struggled with a few nasty crashes before I understood that setting the location of the particle system (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SetRelativeLocation()&lt;/code&gt;) can only be done in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BeginPlay()&lt;/code&gt;, &lt;em&gt;not&lt;/em&gt; in the component’s constructor, since at that point the owner’s location is unknown.&lt;/p&gt;
+
+&lt;h3 id=&quot;playing-a-sound-when-an-item-is-dropped&quot;&gt;Playing a sound when an item is dropped&lt;/h3&gt;
+
+&lt;p&gt;Initially I had naively added two audio components for items that the player can interact with: one was played on grab, the other on release. However, playing a sound when the object is released is not the same as when it hits the floor. From &lt;a href=&quot;https://www.youtube.com/watch?v=_UVwKN8dtQA&amp;amp;list=PLtP1toxty8o27kpPPLyfqLIr27ZRDFRq7&amp;amp;index=13&amp;amp;ab_channel=JoeHudson&quot;&gt;this tutorial&lt;/a&gt; I learned how to make the sound play only when a hit event (collision) occurs. But this wasn’t the full answer to my problem, since every time the player moved around with an item attached to the physics handle and the item collided with something in the environment, the sound would play. I ended up exposing a C++ variable in the grab/release component to the blueprint editor in order to check which actor is currently attached to the physics handle. In the blueprint I implemented the desired behavior: if a collision is registered for an actor &lt;strong&gt;and&lt;/strong&gt; if that actor is no longer attached to the physics handle of the player pawn, &lt;strong&gt;only then&lt;/strong&gt; play the “drop” sound. It’s not perfect but it was an interesting exercise!&lt;/p&gt;
+
+&lt;h2 id=&quot;resources-used&quot;&gt;Resources used&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Models/meshes:
+    &lt;ul&gt;
+      &lt;li&gt;The &lt;a href=&quot;https://www.unrealengine.com/marketplace/en-US/product/a5b6a73fea5340bda9b8ac33d877c9e2&quot;&gt;Medieval Dungeon&lt;/a&gt; asset pack from the Epic Marketplace&lt;/li&gt;
+      &lt;li&gt;The &lt;a href=&quot;https://quixel.com/megascans/home?category=3D+asset&amp;amp;search=castle&amp;amp;assetId=sdAfk&quot;&gt;mossy stone&lt;/a&gt; mesh and material from Quixel&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Surfaces (from Quixel):
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://quixel.com/megascans/home?category=surface&amp;amp;category=stone&amp;amp;category=castle&amp;amp;search=castle&amp;amp;search=wall&amp;amp;assetId=tbhoajkr&quot;&gt;Castle wall&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://quixel.com/megascans/home?search=black&amp;amp;search=marble&amp;amp;assetId=sjvobj1c&quot;&gt;Marble detail&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Sounds (from Freesound):
+    &lt;ul&gt;
+      &lt;li&gt;Ambient track: &lt;a href=&quot;https://freesound.org/people/DrMinky/sounds/166187/&quot;&gt;https://freesound.org/people/DrMinky/sounds/166187/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Pick up sound used for cubes, rocks etc.: &lt;a href=&quot;https://freesound.org/people/Mediaman57/sounds/347149/&quot;&gt;https://freesound.org/people/Mediaman57/sounds/347149/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Drop sound used for cubes, rocks etc.: &lt;a href=&quot;https://freesound.org/people/Bird_man/sounds/275160/&quot;&gt;https://freesound.org/people/Bird_man/sounds/275160/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Drop sound used for stone coffin lids: &lt;a href=&quot;https://freesound.org/people/Robinhood76/sounds/503554/&quot;&gt;https://freesound.org/people/Robinhood76/sounds/503554/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Drop sound for planks and wooden coffin lid: &lt;a href=&quot;https://freesound.org/people/kingsrow/sounds/194692/&quot;&gt;https://freesound.org/people/kingsrow/sounds/194692/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Shattered cups sound: &lt;a href=&quot;https://freesound.org/people/tezzza/sounds/21612/&quot;&gt;https://freesound.org/people/tezzza/sounds/21612/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Ceramic click sound: &lt;a href=&quot;https://freesound.org/people/Mafon2/sounds/371278/&quot;&gt;https://freesound.org/people/Mafon2/sounds/371278/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Key pick up sound: &lt;a href=&quot;https://freesound.org/people/BeezleFM/sounds/512137/&quot;&gt;https://freesound.org/people/BeezleFM/sounds/512137/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Key drop sound: &lt;a href=&quot;https://freesound.org/people/Kyanite_/sounds/432913/&quot;&gt;https://freesound.org/people/Kyanite_/sounds/432913/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Crystal pick up sound: &lt;a href=&quot;https://freesound.org/people/DWOBoyle/sounds/474179/&quot;&gt;https://freesound.org/people/DWOBoyle/sounds/474179/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Magic activation sound: &lt;a href=&quot;https://freesound.org/people/kneekoo/sounds/548497/&quot;&gt;https://freesound.org/people/kneekoo/sounds/548497/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Wooden door open sound: &lt;a href=&quot;https://freesound.org/people/joedeshon/sounds/117416/&quot;&gt;https://freesound.org/people/joedeshon/sounds/117416/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Wooden door close sound: &lt;a href=&quot;https://freesound.org/people/joedeshon/sounds/117415/&quot;&gt;https://freesound.org/people/joedeshon/sounds/117415/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Metal door open sound: &lt;a href=&quot;https://freesound.org/people/LittleRobotSoundFactory/sounds/270461/&quot;&gt;https://freesound.org/people/LittleRobotSoundFactory/sounds/270461/&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;Metal door close sound: &lt;a href=&quot;https://freesound.org/people/newagesoup/sounds/339369/&quot;&gt;https://freesound.org/people/newagesoup/sounds/339369/&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Completing my “dungeon prison breakout” level was a very interesting and challenging journey. I’ve come a long way since I enrolled in this course, but there are so many things I’m yet to discover. I leave this little project behind me with a few small regrets:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The landscape outside the dungeon: that’s not a landscape, it’s an abomination. I need to learn how to do this properly, how to sculpt the environment, use brushes, add foliage and so on.&lt;/li&gt;
+  &lt;li&gt;Destructible meshes cannot be moved, so if I wanted the ceramic pot to break when thrown I’d need to hot-swap the movable mesh with the destructible mesh when the player releases it from the physics handle. I’m not sure yet how to do that.&lt;/li&gt;
+  &lt;li&gt;The main hall feels empty (it’s too big for the props that I’ve sparsely placed in the level).&lt;/li&gt;
+  &lt;li&gt;The particle system is ugly.&lt;/li&gt;
+  &lt;li&gt;The lighting is fake. The shadows of the ceiling chandeliers should not be seen on the floor.&lt;/li&gt;
+  &lt;li&gt;Some volumetric fog could add to the general creepy feeling I wanted the dungeon to convey.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But it’s time to move on with the course. “Toon Tanks”, here I come!&lt;/p&gt;
+
+&lt;!--links--&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Unreal Engine 4" /><category term="learning" /><category term="ue4" /><category term="game design" /><summary type="html"></summary></entry><entry><title type="html">Download UE4 assets from the Epic Games Marketplace using Linux</title><link href="https://alexandra-zaharia.github.io/posts/download-from-unreal-engine-4-marketplace-in-linux/" rel="alternate" type="text/html" title="Download UE4 assets from the Epic Games Marketplace using Linux" /><published>2020-12-15T21:00:00+01:00</published><updated>2020-12-15T21:00:00+01:00</updated><id>https://alexandra-zaharia.github.io/posts/download-from-unreal-engine-4-marketplace-in-linux</id><content type="html" xml:base="https://alexandra-zaharia.github.io/posts/download-from-unreal-engine-4-marketplace-in-linux/">&lt;p&gt;It is an extremely frustrating experience to have an Epic Games account (for Unreal Engine 4) but not be able to download assets from the Marketplace because… Linux. :angry:&lt;/p&gt;
+
+&lt;h2 id=&quot;the-problem-with-linux-and-the-ue4-marketplace&quot;&gt;The problem with Linux and the UE4 Marketplace&lt;/h2&gt;
+
+&lt;p&gt;The Unreal Engine itself is technically supported on Linux: while you cannot download a pre-packaged version (unless your favorite distro maintainers are really cool), you &lt;em&gt;can&lt;/em&gt; link your GitHub account to your Epic Games account in order to gain read access to the Unreal Engine 4 repository. From there, you can clone the UE4 release that you need and compile it from source.&lt;/p&gt;
+
+&lt;p&gt;But figure this: your Epic Games account also gives you access to the Unreal Engine Marketplace. You can use your browser to connect, browse the marketplace and get free assets or buy non-free ones.  Therein lies the problem, you see. You can only “link” them to your account. You cannot download those assets on Linux using the browser. The download button tries to open the UE4 Editor and since the Linux version does not come with the marketplace bundled, you won’t be able to download those assets.&lt;/p&gt;
+
+&lt;p&gt;You can build your UE4 projects on Linux. You just can’t get assets for them from the Epic Games Marketplace… on Linux.&lt;/p&gt;
+
+&lt;h2 id=&quot;there-is-a-solution&quot;&gt;There is a solution&lt;/h2&gt;
+
+&lt;p&gt;And here is where &lt;a href=&quot;https://lutris.net/&quot;&gt;Lutris&lt;/a&gt; comes to the rescue! Lutris is an open-source platform for playing games on Linux. Among the many games that you can download in their Windows version to install in Linux through Wine (provided that you have them in your Steam or GOG libraries), you can also download certain game store clients such as Origin or Epic Games.&lt;/p&gt;
+
+&lt;h2 id=&quot;epic-games-launcher-through-lutris&quot;&gt;Epic Games launcher through Lutris&lt;/h2&gt;
+
+&lt;p&gt;Install Lutris and launch it from a &lt;strong&gt;Python 3.8+ environment&lt;/strong&gt;. Alternatively, ensure the default Python version is 3.8+. This is very important, because if you use an older Python version the install will seemingly complete but the Epic Games launcher will not exist.&lt;/p&gt;
+
+&lt;p&gt;In Lutris, search for “epic games” and install the Epic Games Store. Once finished, check that you have your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;EpicGamesLauncher.exe&lt;/code&gt; executable in your Epic Games install path. For this example, let’s suppose you installed the Epic Games Store in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Programs/epic-games-store&lt;/code&gt;. Then make sure that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Programs/epic-games-store/drive_c/Program\ Files\ \(x86\)/Epic\ Games/Launcher/Portal/Binaries/Win32/EpicGamesLauncher.exe&lt;/code&gt; exists.&lt;/p&gt;
+
+&lt;p&gt;You don’t need to install the Windows version of the Unreal Engine through Wine/Lutris in order to download assets, you just need a UE4 project. And what better way to get your assets imported directly into your Linux projects than to symlink your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Unreal Projects&lt;/code&gt; directory to the virtual Wine file system?&lt;/p&gt;
+
+&lt;p&gt;Here is how to do it. Suppose you store your Linux UE4 projects in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Documents/Unreal Projects&lt;/code&gt;. You just need to create a link from your hypothetical Windows &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;My Documents&lt;/code&gt; to your actual &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Unreal Projects&lt;/code&gt; folder in Linux:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;nb&quot;&gt;ln&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-sf&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    ~/Documents/Unreal&lt;span class=&quot;se&quot;&gt;\ &lt;/span&gt;Projects &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    ~/Programs/epic-games-store/drive_c/users/YOUR_USERNAME/My&lt;span class=&quot;se&quot;&gt;\ &lt;/span&gt;Documents/Unreal&lt;span class=&quot;se&quot;&gt;\ &lt;/span&gt;Projects
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;(Don’t forget to replace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YOUR_USERNAME&lt;/code&gt; with your user name and to backslash-escape spaces in path names.)&lt;/p&gt;
+
+&lt;p&gt;Completely close the Epic Games Store and Lutris and launch them again. Connect to your Epic Games account, then go to Unreal Engine &amp;gt; Library. Your downloadable assets are in your Vault (see below):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/epic_games_marketplace_linux.png&quot; alt=&quot;Epic Games launcher running on Linux&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now select an asset from the Vault and click “Add to project”. A new window will open asking you to which project to add the asset, but your projects might not be visible. Select the “Show all projects” checkbox, then select your project and from the drop-down list select the version of the engine for that particular project:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/epic_games_marketplace_linux_add_asset.png&quot; alt=&quot;Adding an asset to a project on Linux&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now you’re all set! The asset pack is downloaded to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Content/&lt;/code&gt; folder of your UE4 project.&lt;/p&gt;
+
+&lt;!-- links --&gt;</content><author><name>Alexandra Zaharia</name></author><category term="Unreal Engine 4" /><category term="assets" /><category term="linux" /><category term="ue4" /><summary type="html">It is an extremely frustrating experience to have an Epic Games account (for Unreal Engine 4) but not be able to download assets from the Marketplace because… Linux. :angry:</summary></entry></feed>
