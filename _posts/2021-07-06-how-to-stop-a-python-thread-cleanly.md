@@ -133,6 +133,8 @@ iteration 3/10
 Program done
 ```
 
+Notice that when the thread is stopped it now finally gets to the `print('Thread done')` line (a placeholder for an actual cleanup task). Moreover, the main program also gets to the `print('Program done')` line. Clean exit from a thread can therefore be achieved using a threading event and a signal handler.
+
 ## Further reading
 
 * [`threading`][] (Python documentation)
