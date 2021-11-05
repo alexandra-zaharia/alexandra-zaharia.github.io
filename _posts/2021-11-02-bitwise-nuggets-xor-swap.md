@@ -1,7 +1,7 @@
 ---
 title: Bitwise nuggets&#58; XOR swap
 date: 2021-11-02 00:00:00 +0100
-categories: [algorithms, bitwise]
+categories: [Algorithms, bitwise]
 tags: [algorithms, swap, xor]
 ---
 
