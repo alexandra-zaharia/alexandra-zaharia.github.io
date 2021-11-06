@@ -187,9 +187,10 @@ setup(
 )
 ```
 
-That's it! Now the package may be installed with `pip` as shown above and the `capitalize` script becomes available system-wide in the current Python environment.
+That's it! Now the package may be installed with `pip` as shown above and the `capitalize` script becomes available system-wide in the current Python environment. You might want to read the [next post][np] for a special tricky situation involving the use of the standalone script as a runner.
 
 <!-- links -->
 
 [`setuptools`]: https://setuptools.pypa.io/
 [argparse]: https://docs.python.org/3/library/argparse.html
+[np]: {% post_url 2021-11-04-standalone-python-script-to-run-other-python-scripts %}
