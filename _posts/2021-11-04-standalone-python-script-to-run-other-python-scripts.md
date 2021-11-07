@@ -124,8 +124,13 @@ def runner():
 
 Now we finally get the expected output, with `__file__` in `my_script.py` not being overwritten since `runpy` takes care to set it along with several other special global variables before `exec()`ing the code.
 
+## Accompanying code
+
+The full code accompanying this post can be found on my [GitHub][] repository.
+
 <!-- links -->
 [pp]: {% post_url 2021-11-03-distribute-a-python-package-with-a-standalone-script-using-setuptools %}
 [`setuptools`]: https://setuptools.pypa.io/
 [so]: https://stackoverflow.com/questions/69830933
 [`runpy`]: https://docs.python.org/3/library/runpy.html
+[GitHub]: https://github.com/alexandra-zaharia/python-playground/tree/main/packaging_a_standalone_runner
