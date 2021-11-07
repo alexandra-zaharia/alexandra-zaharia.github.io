@@ -1,8 +1,8 @@
 ---
 title: Make your own custom color formatter with Python logging
 date: 2021-06-23 00:00:00 +0100
-categories: [Python, logging]
-tags: [python, logging, formatter]
+categories: [Python, logging, color]
+tags: [python, logging, formatter, ansi codes]
 ---
 
 ## Logging
@@ -23,7 +23,7 @@ Here is what your logger might look like:
 import logging
 import datetime
 
-# Create custom logger logging all five levels 
+# Create custom logger logging all five levels
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -55,7 +55,7 @@ Finally, in lines 23-24, we add the two handlers to our logger and we're ready t
 
 ### A custom color formatter
 
-For building our own custom formatter, we will extend the `logging.Formatter` class, give it the log format we want, and instruct it to print out each message level in a distinct color. ANSI escape codes for 8-color, 16-color and 256-color terminals may be found [here][`color_codes`]. 
+For building our own custom formatter, we will extend the `logging.Formatter` class, give it the log format we want, and instruct it to print out each message level in a distinct color. ANSI escape codes for 8-color, 16-color and 256-color terminals may be found [here][`color_codes`].
 
 Here is how my custom color formatter looks like:
 
