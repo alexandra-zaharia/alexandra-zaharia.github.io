@@ -244,7 +244,7 @@ cat logs/quiet_20211107_131512.log
 
 ### Verbose mode
 
-In verbose mode we can try to spice things up a little bit by using color when writing to stdout, *and* if stdout is a true TTY (e.g. if the output is *not* redirected to a file using `>` or `>>` in Linux). Note that in this example I'm using my custom `Color` enum class, available in the [GitHub][] repo through `color.py`.
+In verbose mode we can try to spice things up a little bit: we disable file output and we log a colored message to stdout, *only if* stdout is a true TTY (e.g. if the output is *not* redirected to a file using `>` or `>>` in Linux). Note that in this example I'm using my custom `Color` enum class, available in the [GitHub][] repo through `color.py`.
 
 ```python
 from color import Color  # see accompanying file color.py
@@ -255,13 +255,13 @@ def test_verbose():
 
     verbose_log.warning('We now log to both stdout and a file log')
 
+    verbose_log.disable_file_output()
     msg = 'Use color in a true TTY'
     if sys.stdout.isatty():
-        verbose_log.disable_file_output()
         verbose_log.info(Color.colored(Color.LIGHTYELLOW, msg))
-        verbose_log.enable_file_output()
     else:
         verbose_log.info(msg + ', but not here')
+    verbose_log.enable_file_output()
 
     verbose_log.framework('We now log everywhere irrespective of verbosity')
 ```
