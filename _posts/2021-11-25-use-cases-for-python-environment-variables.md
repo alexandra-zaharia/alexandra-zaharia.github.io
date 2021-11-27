@@ -8,22 +8,22 @@ tags: [python, environment, software design]
 Today's post focuses on environment variables in Python. They are one of several possible mechanisms for setting various configuration parameters. We can:
 
 * read environment variables (through [`os.environ`][`os`] or [`dotenv`][]) [this post]
-* have the script accept command-line arguments that influence various options (use [`argparse`][])
+* have the script accept command-line arguments (use [`argparse`][])
 * load configuration settings from a file, such as:
     * a JSON file (use [`json`][])
     * a YAML file (use [`pyyaml`][])
     * a XML file (use [`lxml`][], [`ElementTree`][] or [`minidom`][])
     * an INI file (use [`configparser`][])
-    * your DYI file format (for which you will be rolling your own parser)
+    * your DIY file format (for which you will be rolling your own parser)
 
 
 ## What is the best solution?
 
 The answer is... *it depends*.
 
-There is no one-size-fits-all solution. It depends on what you're trying to achieve and on how the current software architecture looks like. If you're working on a command-line tool that must accommodate a plethora of options, chances are you'll be using `argparse`. For other types of projects (such as a server or a client), a configuration file might be more handy. Yet in other situations you may also want to consider using environment variables.
+There is no one-size-fits-all solution. It depends on what you're trying to achieve and on how the current software architecture looks like. If you're working on a command-line tool that must accommodate a plethora of options, chances are you'll be using `argparse`. For other types of projects (such as a server or a client), a configuration file might be more practical. Yet in other situations you may also want to consider using environment variables.
 
-We will be looking in more detail at three such use cases in this post, where environment variables are a good choice.
+We will be looking in more detail at three such use cases in this post, where we will see how environment variables can be a good choice.
 
 But first, let's get the next point out of the way:
 
@@ -32,7 +32,7 @@ But first, let's get the next point out of the way:
 
 Well... *it depends*.
 
-Using environment variables for non-sensitive information that you could just as well transmit via command-line arguments or via a configuration file would indeed be bad. Why? Because being *environment* variables, they actually live *outside* of the code base. Sure, you can access them based on their key (their name) and attach some meaning to them, but this is not the most Pythonic, nor effective way for that manner, to do things (if it can be avoided).
+Indeed, using environment variables for non-sensitive information that you could just as well transmit via command-line arguments or via a configuration file is not ideal. Why? Because being *environment* variables, they actually live *outside* of the code base. Sure, you can access them based on their key (their name) and attach some meaning to them, but this is neither the most Pythonic, nor the most effective way, to do things (if this can be avoided).
 
 Nevertheless, there are also legit cases where environment variables are preferable:
 * when setting execution mode (e.g. debug or development mode vs production mode)
@@ -103,7 +103,7 @@ I use `get_env_setting()` to retrieve a value from `os.environ` (if the key exis
 
 ### dotenv
 
-To set multiple environment variables, you could create a bash script and ensure you run it before starting the Python script that uses these environment variables. But there is something more effective than this: [`dotenv`][] allows you to load environment variables from a `.env` file having the following format:
+To set multiple environment variables, you could create a bash script and ensure you run it before starting the Python script that needs these environment variables. But there is something more effective than this: [`dotenv`][] allows you to load environment variables from a `.env` file having the following format:
 
 ```bash
 # Development settings
@@ -141,7 +141,7 @@ Taking this idea one step further, you could use an environment variable `MY_APP
 
 Many applications require access tokens: they can be API tokens, database passwords and so on. Storing such sensitive information inside the code base is just an accident waiting to happen, no matter how *sure* you are that you're *never* going to commit that special extra line to version control.
 
-Here's where environment variables come in handy. You could add your secret tokens to the `.env` file and load it with `dotenv` as we've seen above. Of course, you make sure that your `.gitignore` or `.hgignore` contains the `.env` file.
+Here's where environment variables come in handy. You could add your secret tokens to the `.env` file and load it with `dotenv` as we've seen above. Of course, you'd need to make sure that your `.gitignore` or `.hgignore` contains the `.env` file.
 
 In short, instead of:
 
@@ -163,15 +163,15 @@ do_stuff_with(SECRET_TOKEN)
 
 ## Use case: injecting configuration into a black box
 
-This final use case is something I haven't come across. It's something I call a "black box", meaning code that you have no control over: you didn't write it, you cannot change it but you have to run it. Along these lines, remember how in a [previous post][pp] I wrote about creating a Python script that runs user code from another Python script, using `runpy`. That's the kind of use case I am referring to.
+This final use case is something you're not going to come across very often in internet discussions. It's something I call a "black box", meaning code that you have no control over: you didn't write it, you cannot change it but you have to run it. Along these lines, remember how I wrote in a [previous post][pp] about creating a Python script that runs user code from other Python scripts. That's the kind of use case I am referring to.
 
-OK, you may ask, *but why???* Why would you want to run code that you have no control over? Well, suppose you're writing a testing framework that other people may use to write tests for... testing stuff. The tests are not relevant, only the part about _having to run them_ is. There are two aspects at play here:
+OK, you may ask, *but why???* Why would you want to run code that you have no control over? Well, suppose you're writing a testing framework that other people may use to write tests for... well, testing stuff. The tests are not relevant, only the part about _having to run them_ is. There are two aspects at play here:
 * the framework is a **library** that users import from in order to write their tests;
 * the framework is also a **framework**, meaning a master runner script that runs the user scripts.
 
 For the users' sake, their only task should be to read and understand the framework's well-documented API. They should _not_ have to fiddle around with passing configuration options into their code. The configuration options for running their scripts through the framework may be sent through the command line and/or through configuration files.
 
-What a user script typically does is to import abstractions from the framework and to use them to create and execute tests. For example:
+What a user script typically does is to import abstractions from the framework and to use them for creating and executing tests. For example:
 
 ```python
 # user_script.py
@@ -218,7 +218,7 @@ $
 ```
 
 Now remember that what the `fancy_framework` does among other things is to simply run the provided `user_script.py`. How should a `fancy_framework.Test` object know whether verbosity is on when its `execute()` method is called? Here is where environment variables step in to save the day:
-* The `fancy_framework` exports an environment variable `FANCY_FRAMEWORK_VERBOSITY` according to the user's choice of using the `--verbose` flag or not.
+* The `fancy_framework` exports an environment variable `FANCY_FRAMEWORK_VERBOSITY` according to the user's choice (whether the `--verbose` flag was used).
 * When a `Test` object is initialized, it reads the value of `FANCY_FRAMEWORK_VERBOSITY` from `os.environ` and stores it in an instance variable `self._verbose`.
 * When the `execute()` method of the `Test` instance is called, details are printed to stdout only if `self._verbose` is true.
 
