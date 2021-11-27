@@ -1,8 +1,8 @@
 ---
 title: Bitwise nuggets&#58; count set bits
 date: 2019-03-31 00:00:00 +0100
-categories: [C, bitwise]
-tags: [algorithms, binary]
+categories: [C/C++, bitwise]
+tags: [c/c++, algorithms, binary]
 ---
 
 If we want to count the number of set bits (i.e. bits that are `1`) in an int, we can check whether its least significant bit (LSB) is 1, count it as set if applicable, then right-shift the int by one position until we've seen the number of bits in an int.

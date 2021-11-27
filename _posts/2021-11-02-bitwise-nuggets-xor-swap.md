@@ -2,7 +2,7 @@
 title: Bitwise nuggets&#58; XOR swap
 date: 2021-11-02 00:00:00 +0100
 categories: [Algorithms, bitwise]
-tags: [algorithms, swap, xor]
+tags: [c/c++, algorithms, swap, xor]
 ---
 
 XOR swap is a kind of in-place swap that only uses XOR operations. No temporary variable nor addition/subtraction operation is needed. However, it only works for integers.

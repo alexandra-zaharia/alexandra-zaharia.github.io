@@ -1,8 +1,8 @@
 ---
 title: The overloaded insertion operator in C++ exceptions
 date: 2021-11-14 00:00:00 +0100
-categories: [C++, operators]
-tags: [c++, exception, stringstream]
+categories: [C/C++, operators]
+tags: [exception, stringstream]
 ---
 
 The `<<` operator, when applied to streams, is called the **insertion** operator. (Likewise, the extraction operator is `>>`). If we overload it for a class (as non-member), we can output instances of that class. That's very handy.

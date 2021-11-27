@@ -1,8 +1,8 @@
 ---
 title: Bitwise nuggets&#58; invert the n least significant bits
 date: 2019-03-30 00:00:00 +0100
-categories: [C, bitwise]
-tags: [algorithms, binary]
+categories: [C/C++, bitwise]
+tags: [c/c++, algorithms, binary]
 ---
 
 Suppose we want to invert the `n` least significant bits in a number. For example:

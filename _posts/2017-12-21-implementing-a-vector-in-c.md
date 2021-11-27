@@ -1,8 +1,8 @@
 ---
 title: Implementing a vector in C
 date: 2017-12-21 00:00:00 +0100
-categories: [C, data structures]
-tags: [c, vector]
+categories: [C/C++, data structures]
+tags: [c/c++, vector]
 math: true
 ---
 
@@ -24,11 +24,11 @@ append 7 to v :           | 7 |   |   |   |
 
                           -----------------
 append 1 to v :           | 7 | 1 |   |   |
-                          -----------------           
+                          -----------------
 
                           -----------------
 append 5 to v :           | 7 | 1 | 5 |   |
-                          -----------------           
+                          -----------------
 
                           -----------------
 append 9 to v :           | 7 | 1 | 5 | 9 |
@@ -36,25 +36,25 @@ append 9 to v :           | 7 | 1 | 5 | 9 |
 
                             0   1   2   3   4   5   6   7
                           ---------------------------------
-insert 2 at index 3 :     | 7 | 1 | 5 | 2 | 9 |   |   |   |   <-- capacity doubles   
+insert 2 at index 3 :     | 7 | 1 | 5 | 2 | 9 |   |   |   |   <-- capacity doubles
                           ---------------------------------
 
                             0   1   2   3   4   5   6   7
                           ---------------------------------
-insert 2 at index 3 :     | 7 | 1 | 5 | 2 | 9 |   |   |   |   
+insert 2 at index 3 :     | 7 | 1 | 5 | 2 | 9 |   |   |   |
                           ---------------------------------
 
                             0   1   2   3   4   5   6   7
                           ---------------------------------
-remove item at index 3 :  | 7 | 1 | 5 | 9 |   |   |   |   |   
+remove item at index 3 :  | 7 | 1 | 5 | 9 |   |   |   |   |
                           ---------------------------------
 
                             0   1   2   3   4   5   6   7
                           ---------------------------------
-remove item at index 1 :  | 7 | 5 | 9 |   |   |   |   |   |   
+remove item at index 1 :  | 7 | 5 | 9 |   |   |   |   |   |
                           ---------------------------------
 
-                            0   1   2   3  
+                            0   1   2   3
                           -----------------
 remove item at index 0 :  | 5 | 9 |   |   |   <-- capacity is reduced by half since 75% empty
                           -----------------
@@ -62,7 +62,7 @@ remove item at index 0 :  | 5 | 9 |   |   |   <-- capacity is reduced by half si
 
 ## Comparison with alternative data structures
 
-A **fixed-size array** allows access to its elements in \\( O(1) \\) time. Adding items at the end of the array also takes \\( O(1) \\) time. However, insertion (other than at the end of the array) and deletion require \\( O(n) \\) time. As its name implies, a fixed-size array cannot change its size. 
+A **fixed-size array** allows access to its elements in \\( O(1) \\) time. Adding items at the end of the array also takes \\( O(1) \\) time. However, insertion (other than at the end of the array) and deletion require \\( O(n) \\) time. As its name implies, a fixed-size array cannot change its size.
 
 A **vector** uses an underlying *resizing* array, meaning that its capacity is automatically adjusted to accommodate its elements.
 
@@ -72,7 +72,7 @@ An array (a fixed-size array or a resizing array, i.e. a vector) should be used 
 
 ## Resizing the vector
 
-A vector starts out with an initial capacity, for which we can make an educated guess depending on the application. Let us suppose a good choice for an initial capacity is 4. 
+A vector starts out with an initial capacity, for which we can make an educated guess depending on the application. Let us suppose a good choice for an initial capacity is 4.
 
 When the 5<sup>th</sup> item is added to the vector, its capacity doubles, becoming 8. When the 9<sup>th</sup> item is added, the capacity doubles again, becoming 16, and so on. **Doubling the vector capacity** is thus performed only if it is absolutely necessary to do so.
 
@@ -109,9 +109,9 @@ Any basic `Vector` API should have the following methods:
 
 * A method to create a vector: `Vector *vector_create()` creates a `Vector` and returns a pointer to it, or the `NULL` pointer in case of failure.
 * A method to free a vector: `void vector_free(Vector *vector)` frees the specified `vector`.
-* A method to add an item at the end of a vector: `int vector_add(Vector *vector, void *item)` attempts to add the given `item` at the end of the `vector`, doubling the size of the underlying array if necessary. Returns 0 for success and -1 for failure. 
-* A method to insert an item at an arbitrary position: `int vector_insert(Vector *vector, void *item, int index)` attempts to insert the given `item` at a specified `index` in the `vector`, doubling the size of the underlying array if necessary. Returns 0 for success and -1 for failure. 
-* A method to delete an item at an arbitrary position: `int vector_delete(Vector *vector, int index)` attempts to delete the `item` at the specified `index` in the `vector`, halving the size of the underlying array if necessary. Returns 0 for success and -1 for failure. 
+* A method to add an item at the end of a vector: `int vector_add(Vector *vector, void *item)` attempts to add the given `item` at the end of the `vector`, doubling the size of the underlying array if necessary. Returns 0 for success and -1 for failure.
+* A method to insert an item at an arbitrary position: `int vector_insert(Vector *vector, void *item, int index)` attempts to insert the given `item` at a specified `index` in the `vector`, doubling the size of the underlying array if necessary. Returns 0 for success and -1 for failure.
+* A method to delete an item at an arbitrary position: `int vector_delete(Vector *vector, int index)` attempts to delete the `item` at the specified `index` in the `vector`, halving the size of the underlying array if necessary. Returns 0 for success and -1 for failure.
 
 In the remainder of this section we will implement each of these methods in turn.
 
@@ -157,9 +157,9 @@ void vector_free(Vector *vector)
 
 Yes, `_vector_resize()` is not listed above. The reason for this is that this method is not part of the public API, but it is required for methods that may need to resize the underlying array: `vector_add()`, `vector_insert()` and `vector_delete()`. The client of the `Vector` API does not even need to know that this function exists. In order to keep it *private* to the implementation file of the vector (the `.c` file), we will be declaring it `static`.
 
-The function starts out by attempting to reallocate the vector's underlying array `data` with the new `capacity`. 
+The function starts out by attempting to reallocate the vector's underlying array `data` with the new `capacity`.
 
-> **Note**: We use a new `void **` pointer for this reallocation. This is important, because `realloc()` is not guaranteed to return a pointer to the memory location occupied by the array to be resized. 
+> **Note**: We use a new `void **` pointer for this reallocation. This is important, because `realloc()` is not guaranteed to return a pointer to the memory location occupied by the array to be resized.
 
 ```c
 static int _vector_resize(Vector *vector, size_t capacity)
@@ -275,7 +275,7 @@ bool vector_contains(Vector* vector, void* item)
 
 ### vector_index()
 
-If the vector is not `NULL`, we iterate its `data` array until we find the specified item or until we hit the end of the array. 
+If the vector is not `NULL`, we iterate its `data` array until we find the specified item or until we hit the end of the array.
 ```c
 int vector_index(Vector* vector, void* item)
 {
@@ -372,7 +372,7 @@ int main(void)
     Point p1 = {.x = 1, .y = 10};
     Point p2 = {.x = 2, .y = 20};
     Point p3 = {.x = 3, .y = 30};
-       
+
     vector_add(vector, &p1);
     vector_add(vector, &p3);
     vector_insert(vector, &p2, 1);
@@ -397,7 +397,7 @@ void vector_point_print(Vector *vector)
 > **Note**: Checks for return codes from `vector_add()` and `vector_insert()` should be performed, but have been omitted here for the sake of brevity.
 
 ## Testing the implementation
-This `Vector` implementation has been extensively tested using the [cmocka](https://cmocka.org/) testing framework. The tests are provided in the file [vector-test.c]. 
+This `Vector` implementation has been extensively tested using the [cmocka](https://cmocka.org/) testing framework. The tests are provided in the file [vector-test.c].
 
 [vector-test.c]: https://github.com/alexandra-zaharia/libgcds/blob/master/tests/vector-test.c
 

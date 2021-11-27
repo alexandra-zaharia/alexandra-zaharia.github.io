@@ -1,8 +1,8 @@
 ---
 title: Bitwise nuggets&#58; convert an integer to a binary string
 date: 2019-03-30 00:00:00 +0100
-categories: [C, bitwise]
-tags: [algorithms, binary]
+categories: [C/C++, bitwise]
+tags: [c/c++, algorithms, binary]
 ---
 
 When we want to display an int as a binary string, we need a utility function that builds the string representation of the integer. We do this from the least significant bit (LSB) up to the most significant bit (MSB) of the integer.

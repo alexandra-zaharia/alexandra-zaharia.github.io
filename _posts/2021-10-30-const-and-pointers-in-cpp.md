@@ -1,8 +1,8 @@
 ---
 title: Const and pointers in C++
 date: 2021-10-30 00:00:00 +0100
-categories: [C++, pointers]
-tags: [c++, pointers, const]
+categories: [C/C++, pointers]
+tags: [pointers, const]
 ---
 
 The possible uses of the `const` qualifier with C++ pointers:
