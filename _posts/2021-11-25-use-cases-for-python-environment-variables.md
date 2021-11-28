@@ -7,13 +7,13 @@ tags: [python, environment, software design]
 
 Today's post focuses on environment variables in Python. They are one of several possible mechanisms for setting various configuration parameters. We can:
 
-* read environment variables (through [`os.environ`][`os`] or [`dotenv`][]) [this post]
+* read environment variables (through [`os.environ`][`os`] or [`dotenv`][]) [the current post]
 * have the script accept command-line arguments (use [`argparse`][])
 * load configuration settings from a file, such as:
     * a JSON file (use [`json`][])
     * a YAML file (use [`pyyaml`][])
     * a XML file (use [`lxml`][], [`ElementTree`][] or [`minidom`][])
-    * an INI file (use [`configparser`][])
+    * an INI file (use [`configparser`][]) [check out [this post][pp-data]]
     * your DIY file format (for which you will be rolling your own parser)
 
 
@@ -244,8 +244,12 @@ class Test:
 
 Isn't that neat? In this use case we've seen how environment variables can be used to inject configuration into a black-box system.
 
+Check out [this article][pp-data] for a discussion of passing configuration options in Python through through (INI) files in such a way as to only use identifiers instead of strings for the configuration keys.
+
+
 <!-- links -->
 [pp]: {% post_url 2021-11-04-standalone-python-script-to-run-other-python-scripts %}
+[pp-data]: {% post_url 2021-11-05-python-configuration-and-dataclasses %}
 [`argparse`]: https://docs.python.org/3/library/argparse.html
 [`json`]: https://docs.python.org/3/library/json.html
 [`pyyaml`]: https://wiki.python.org/moin/YAML
