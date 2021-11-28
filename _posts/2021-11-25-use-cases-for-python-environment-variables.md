@@ -244,7 +244,7 @@ class Test:
 
 Isn't that neat? In this use case we've seen how environment variables can be used to inject configuration into a black-box system.
 
-Check out [this article][pp-data] for a discussion of passing configuration options in Python through through (INI) files in such a way as to only use identifiers instead of strings for the configuration keys.
+Check out [this article][pp-data] for a discussion of passing configuration options in Python in such a way as to only use *identifiers* instead of strings for the configuration keys.
 
 
 <!-- links -->
