@@ -8,7 +8,9 @@ order: 4
 
 ## Who am I?
 
-Hi there! I'm a software engineer currently working in embedded systems. I hold a PhD degree in bioinformatics. During my PhD I taught computer science classes to Masters' students and found the whole experience very exciting. I'm passionate about problem solving and I view software development as craftsmanship. You can check out my [GitHub][] profile and [my resume](https://alexandra-zaharia.org){:target="_blank"} or you can connect with me on [LinkedIn][].
+Hi there! I'm a software engineer currently working in embedded systems. I hold a PhD degree in computer science. During my PhD I was a teaching assistant for first year Masters' students and found the whole experience very exciting. I'm passionate about problem solving and I view software development as craftsmanship. 
+
+You can check out my [GitHub][] profile and my [resume](https://alexandra-zaharia.org){:target="_blank"} or you can connect with me on [LinkedIn][].
 
 Outside of work I enjoy weightlifting and scuba diving <s>staying at home (COVID-19 edition)</s>, (my) cats, single player RPGs, sci-fi, coloring and many more. I love learning stuff, such as Spanish or drawing, and taking [scuba diving photos](https://www.ivresse-des-profondeurs.com/){:target="_blank"}.
 
@@ -19,8 +21,6 @@ My motto is:
 (The story of my life, literally.)
 
 I can't stand people who take themselves too seriously.
-
-[//]: # "Where do you draw the line between a harmless idiot and a dangerous individual?"
 
 ## This blog
 At the end of 2020 I decided to migrate some of my old posts from Blogspot and  Google Sites and start afresh with this beautiful Jekyll theme called [Chirpy][]. I started to slowly transform my pen-and-paper notes as well into blog posts. Being a bit OCD, I scrupulously respect the original date of an entry.
