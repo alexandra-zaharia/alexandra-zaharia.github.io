@@ -5,15 +5,15 @@ categories: [C/C++, bitwise]
 tags: [c/c++, algorithms, binary]
 ---
 
-Here we discuss how to rotate a number to the left by `k` positions, using byte precision.
+Here we discuss how to rotate a number to the left by `k` positions, using *byte precision*. (In a following post we'll see the same problem when [bit precision][np] is used.)
 
 What does that even mean? We want to left-shift the number by `k` bits, but the most significant `k` bits that overflow as a result of the left-shift operation must be saved and added to the `k` least significant bits of the left-shifted number (these bits are zero after the left-shift). In addition, the rotation has *byte precision*, meaning we left-shift on the number of bytes that the number requires for its representation.
 
-Let us see an example to better visualize the rotation to the left. Suppose we want to rotate the number 100 to the left by 3 positions. As shown below, we expect to obtain 35:
+Let us see an example to better visualize the rotation to the left. Suppose we want to rotate the number 100 to the left by 3 positions. As shown below, when using byte precision, we expect to obtain 35:
 
 ![rotate_left(100, 3)](/assets/img/posts/bitwise_rotate_left_byte.png){: width="700"}
 
-Since we're using byte precision, the actual overflow when 100 is left-shifted by 3 positions is `011`, not `11`. It is possible to rotate a number on the number of *bits* it requires for its representation, but that is a subject for another time.
+Since we're using byte precision, the actual overflow when 100 is left-shifted by 3 positions is `011`, not `11`. It is possible to rotate a number on the number of *bits* it requires for its representation, but that is a subject for [another time][np].
 
 Here are the steps for solving this problem:
 
@@ -60,7 +60,7 @@ unsigned int rotate_left_byte_precision(unsigned int number, unsigned int k)
 }
 ```
 
-At lines 13-17 we determine the `precision`, i.e. the number of bits multiple of 8 (`CHAR_BIT`) required to represent the `number`. We need the `precision` in order to determine the `overflow` bits at line 20. At lines 26-27, we ensure that the rotation takes place only on the number of bytes that are required to represent the original number. Finally, at line 30 we add the `overflow` to the `left_shifted` number using the logical `OR` operator.
+At lines 14-18 we determine the `precision`, i.e. the number of bits multiple of 8 (`CHAR_BIT`) required to represent the `number`. We need the `precision` in order to determine the `overflow` bits at line 21. At lines 27-28, we ensure that the rotation takes place only on the number of bytes that are required to represent the original number. Finally, at line 31 we add the `overflow` to the `left_shifted` number using the logical `OR` operator.
 
 Here are some examples of left rotation on byte precision in action:
 
@@ -73,7 +73,9 @@ rotate_left_byte_precision(    983396,  8) =      91151
 rotate_left_byte_precision(3422643215,  5) = 2150400505
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
+[np]: {% post_url 2019-04-03-bitwise-nuggets-rotate-number-to-the-left-on-bit-precision %}
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
