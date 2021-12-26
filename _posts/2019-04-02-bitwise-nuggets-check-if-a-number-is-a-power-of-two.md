@@ -33,7 +33,8 @@ bool is_power_of_two(int number)
 }
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
