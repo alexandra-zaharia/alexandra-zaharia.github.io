@@ -62,8 +62,9 @@ clear_most_significant_bits_up_to_pos(2019, 10) =  995 = 01111100011
 clear_most_significant_bits_up_to_pos(2019, 11) = 2019 = 11111100011
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
 [np]: {% post_url 2019-04-01-bitwise-nuggets-clear-lsb-up-to-position %}
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
