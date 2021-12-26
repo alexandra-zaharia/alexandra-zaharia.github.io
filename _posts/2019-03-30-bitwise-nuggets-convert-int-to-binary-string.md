@@ -52,7 +52,8 @@ int_to_binary_string(  -1) = 11111111111111111111111111111111
 int_to_binary_string(  -2) = 11111111111111111111111111111110
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}

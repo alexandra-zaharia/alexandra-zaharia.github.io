@@ -61,8 +61,9 @@ clear_least_significant_bits_up_to_pos(2019,  9) = 1024 = 10000000000
 clear_least_significant_bits_up_to_pos(2019, 10) =    0 = 00000000000
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
 [pp]: {% post_url 2019-03-31-bitwise-nuggets-clear-msb-up-to-position %}

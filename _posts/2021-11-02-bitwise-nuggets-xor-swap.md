@@ -38,3 +38,9 @@ int main()
 ```
 
 Not that it's very useful in practice since modern compilers optimize swapping when using a temporary variable (and there's also the `XCHG` assembler instruction), but it's fun to know about it :upside_down_face:
+
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
+
+<!-- links -->
+[GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}

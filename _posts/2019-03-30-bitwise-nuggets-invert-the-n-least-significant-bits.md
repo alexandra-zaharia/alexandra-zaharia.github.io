@@ -42,7 +42,8 @@ int invert_n_lsb(int number, int n_bits)
 }
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}

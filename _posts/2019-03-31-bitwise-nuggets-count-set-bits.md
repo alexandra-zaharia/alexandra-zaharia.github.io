@@ -48,7 +48,8 @@ count_set_bits(  -1) = 32
 count_set_bits(  -2) = 31
 ```
 
-Want to see more bitwise logic? There's a whole repository on my [GitHub] on bit fiddling.
+Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on bit fiddling.
 
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
+[bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
