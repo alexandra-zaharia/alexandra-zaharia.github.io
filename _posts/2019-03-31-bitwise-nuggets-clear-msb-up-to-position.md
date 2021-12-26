@@ -5,7 +5,7 @@ categories: [C/C++, bitwise]
 tags: [c/c++, algorithms, binary]
 ---
 
-Here we discuss how to clear the most significant bits (MSB) in an integer up to a given position `pos` (including `pos`). (Check out [this post][np] for clearing the LSBs up to a given position.)
+Here we discuss how to clear the most significant bits (MSB) in an integer up to a given position `pos` (including `pos`). (Check out [this post][np] for clearing the LSBs up to a given position, or [this one][np2] for clearing only the first `k` MSBs.)
 
 What does that even mean? Well, in a number, bits are numbered starting from 0, where the bit at position 0 is the least significant bit (or LSB for short). Take the number 2019 for instance; its LSB (at position 0) is 1 and its MSB (at position 10) is also 1:
 
@@ -67,4 +67,5 @@ Want to see more [bitwise][] logic? There's a whole repository on my [GitHub] on
 <!-- links -->
 [GitHub]: https://github.com/alexandra-zaharia/c-playground/tree/master/bitwise_operations
 [np]: {% post_url 2019-04-01-bitwise-nuggets-clear-lsb-up-to-position %}
+[np2]: {% post_url 2019-04-03-bitwise-nuggets-clear-the-k-msb %}
 [bitwise]: {{ site.baseurl }}{% link categories/bitwise/index.html %}
