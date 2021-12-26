@@ -31,7 +31,8 @@ Here is how this algorithm can be implemented in C:
 // Rotate the given `number` to the left by `k` positions. Rotation takes place on
 // 1 through 4 bytes, depending on how many the `number` needs for its
 // representation.
-unsigned int rotate_left_byte_precision(unsigned int number, unsigned int k) {
+unsigned int rotate_left_byte_precision(unsigned int number, unsigned int k)
+{
     // number of bits multiple of CHAR_BIT needed to represent `number`
     unsigned int precision = 0;
 
