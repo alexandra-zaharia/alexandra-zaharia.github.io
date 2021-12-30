@@ -7,7 +7,7 @@ tags: [python, multiprocessing]
 
 ## The problem
 
-Sometimes you may want to impose a timeout on a Python function. Why would you want to do such a thing? Let's say you're computing something but you know there are some hopeless scenarios where the computation just takes too long, and you'd be OK to just skip them and go on with the rest of the workflow. 
+Sometimes you may want to impose a timeout on a Python function. Why would you want to do such a thing? Let's say you're computing something but you know there are some hopeless scenarios where the computation just takes too long, and you'd be OK to just skip them and go on with the rest of the workflow.
 
 For an illustration, the figure below shows several tasks. Those that take longer than the specified timeout should be aborted (orange) and the remaining tasks that take a reasonable amount of time should be executed normally (green).
 
@@ -31,7 +31,7 @@ def do_stuff(n):
 
 For the purpose of this example, we want to let this function `do_stuff()` run until it either completes or hits the 5-second mark, whichever event comes first. Actually, in the [previous post][pp], we let it run just below 6 seconds, because the argument to `signal.alarm()` is necessarily an integer. If that argument was 5, `do_stuff()` would not have been allowed to run for 5 seconds. Apart from the shortcomings of the `signal`-based solution, the `multiprocessing` module also solves this nagging issue; we can now use a non-integer timeout, for example 5.01 seconds.
 
-Although `multiprocessing` is more commonly known for providing parallelization capability and managing concurrency, it can also be used to spawn processes. Processes can have a set timeout, which is exactly what we are looking for here.
+Although `multiprocessing` is the package that comes to mind when attempting to parallelize processes, its basic role is to simply spawn processes, as its name implies. (Processes spawned with `multiprocessing` *may*, but do not *have to*, be parallel.) We can set a timeout on the processes that are spawned, which is exactly what we are looking for here.
 
 The script below runs indefinitely. At each passage through the infinite loop, it randomly selects a duration between 1 and 10 seconds. It then spawns a new `multiprocessing.Process` that executes the time-consuming `do_stuff()` function for the random duration. If `do_stuff()` doesn't finish in 5 seconds (actually, 5.01 seconds), the process terminates:
 
@@ -93,7 +93,7 @@ duration = 7: ^C
 
 In this post we've seen another solution for setting a timeout on a function in Python, this time using the `multiprocessing` module. It is easy to implement and does not suffer from any of the drawbacks of the `signal`-based solution described in the [previous post][pp].
 
-## Further reading 
+## Further reading
 
 * [`multiprocessing`] (Python documentation)
 * [Parallel processing in Python][stackabuse] (Frank Hofmann on stackabuse)

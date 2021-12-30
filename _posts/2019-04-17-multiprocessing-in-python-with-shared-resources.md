@@ -1,11 +1,11 @@
 ---
 title: Multiprocessing in Python with shared resources
 date: 2019-04-17 01:00:00 +0100
-categories: [Python, parallelism, subprocess]
+categories: [Python, concurrency, subprocess]
 tags: [python, subprocess, multiprocessing, lock]
 ---
 
-## The problem 
+## The problem
 
 In the [previous post on parallelism in Python][pp], we have seen how an external Python script performing a long computation can be ran in parallel using Python's [`multiprocessing`][] module. If you haven't done so already, take your time to read that post before this one.
 
@@ -52,7 +52,7 @@ What we will be doing now is launching 100 processes in parallel on as many thre
 
 ### The shared resource
 
-Here is where the **shared resource** come into play. At the end of each "computation", the worker process accesses this shared resource in both read and write mode. For the purpose of this example, let us imagine the shared resource is a list of results. The worker process needs to read the resource and update it with a certain value only if the value is not yet present in the list. 
+Here is where the **shared resource** come into play. At the end of each "computation", the worker process accesses this shared resource in both read and write mode. For the purpose of this example, let us imagine the shared resource is a list of results. The worker process needs to read the resource and update it with a certain value only if the value is not yet present in the list.
 
 > **Note:** The more observant may argue that a list updated only with values that are not already included in the list is the equivalent of a set. This is correct, however:
 * the Python `multiprocessing` module only allows lists and dictionaries as shared resources, and
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
 ### Explanation
 
-Just like in the [previous post][pp], we define a pool of tasks that we want to parallelize. Although the aim is to eventually run 100 processes (`NUMBER_OF_TASKS` is 100, see lines 5 and 23), we cannot effectively run them all at the same time. For true parallelism, a CPU thread should handle one process at a time. This is why we define the pool of tasks as holding as many processes as there are CPU threads at line 24 (this is the default behavior for `mp.Pool()` with no argument). If you want to specify a different number of processes with respect to the available number of CPU threads you may use the `cpu_count()` method in the `multiprocessing` module or in the `os` module (for example, `mp.cpu_count() - 1`).
+Just like in the [previous post][pp], we define a pool of tasks that we want to parallelize. Although the aim is to eventually run 100 processes (`NUMBER_OF_TASKS` is 100, see lines 5 and 23), we cannot effectively run them all at the same time. For true parallelism, each task should be handled by a separate CPU, and the tasks should be ran at the same time. This is why we define the pool of tasks as holding as many processes as there are CPU threads at line 24 (this is the default behavior for `mp.Pool()` with no argument). If you want to specify a different number of processes with respect to the available number of CPU threads you may use the `cpu_count()` method in the `multiprocessing` module or in the `os` module (for example, `mp.cpu_count() - 1`).
 
 Once the multiprocessing pool is defined, we want to get stuff done. But before calling `apply_async()` on the pool's processes, we first need to create both the shared resource that we've been talking about and the lock that will ensure that only one process may access the shared resource at a given time. Unlike in real life, if you want to get stuff done in Python's `multiprocessing` module, you actually _do_ need a `Manager`. We first create this manager, then use it to create the `lock` and the `shared_list` (lines 25-27).
 
@@ -115,7 +115,7 @@ Here is how the `work()` function handles the shared resource. It launches the e
 Here is the output of our `main.py` script, truncated for brevity:
 
 ```
-$ python main.py 
+$ python main.py
   0%|                                                        | 0/100 [00:00<?, ?it/s]
 I just did some hard work for 2s!
   1%|                                                        | 1/100 [00:02<03:21,  2.04s/it]

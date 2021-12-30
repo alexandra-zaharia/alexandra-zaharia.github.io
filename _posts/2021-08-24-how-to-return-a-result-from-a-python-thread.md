@@ -110,11 +110,12 @@ if __name__ == '__main__':
 
 ## Caveat
 
-The more observant types have probably noticed that although `ReturnValueThread` returns the result of the target function, our `thread2` in the above example (the thread that times out) does not exit cleanly. In fact, it runs until the `sleep()` ends. In a [previous post][pp] we have seen how to exit a Python thread cleanly. Another solution is to use a process instead of a thread, but this comes with its own set of complications. The most notable difficulty is the fact that, unlike threads, processes run in separate memory spaces.
+The more observant types have probably noticed that although `ReturnValueThread` returns the result of the target function, our `thread2` in the above example (the thread that times out) does not exit cleanly. In fact, it runs until the `sleep()` ends. In a [previous post][pp] we have seen how to exit a Python thread cleanly. Another solution is to use a process instead of a thread, but this comes with its own set of complications. The most notable difficulty is the fact that, unlike threads, processes run in separate memory spaces, which tends to complicate things since resources now have to be [shared][sr].
 
 ## Further reading
 
 * [How to exit a Python thread cleanly][pp] (using a threading event)
+* [Multiprocessing in Python with shared resources][sr]
 * [`concurrent.futures`] (Python documentation)
 * [`multiprocessing.pool.ThreadPool`] (Python documentation)
 * [`threading`] (Python documentation)
@@ -123,6 +124,7 @@ The more observant types have probably noticed that although `ReturnValueThread`
 <!-- links -->
 
 [pp]: {% post_url 2021-07-06-how-to-stop-a-python-thread-cleanly %}
+[sr]: {% post_url 2019-04-17-multiprocessing-in-python-with-shared-resources %}
 [`concurrent.futures`]: https://docs.python.org/3/library/concurrent.futures.html
 [`multiprocessing.pool.ThreadPool`]: https://docs.python.org/3/library/multiprocessing.html#module-multiprocessing.dummy
 [`threading`]: https://docs.python.org/3/library/threading.html

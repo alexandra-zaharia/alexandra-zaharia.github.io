@@ -1,11 +1,11 @@
 ---
 title: How to stop a Python thread cleanly
 date: 2021-07-06 00:00:00 +0100
-categories: [Python, parallelism, thread]
+categories: [Python, concurrency, thread]
 tags: [python, threads]
 ---
 
-Suppose a Python thread needs to be stopped cleanly (it might need to perform cleanup). 
+Suppose a Python thread needs to be stopped cleanly (it might need to perform cleanup).
 
 For illustration, we will take a very simple program in with a single "worker" thread that displays a message when it is done. The message is a placeholder for real cleanup, and the thread itself sleeps for a given number of iterations (as a placeholder for significant work). In our example, we want to stop the thread through a keyboard interrupt (Ctrl + C).
 
@@ -53,7 +53,7 @@ The first Ctrl + C stops the main program, but not the thread. The second time, 
 
 ## Using a daemon thread is not a good idea
 
-The Python [`threading`][] documentation explains that a thread may be started as a daemon, meaning that "the entire Python program exits when only daemon threads are left". The main program itself is not a daemon thread. 
+The Python [`threading`][] documentation explains that a thread may be started as a daemon, meaning that "the entire Python program exits when only daemon threads are left". The main program itself is not a daemon thread.
 
 While this approach has the merit of effectively stopping the thread, it does not allow to exit it cleanly. From the Python documentation:
 
@@ -81,7 +81,7 @@ if stop_event.is_set():
 The stop event needs to be set when a keyboard interrupt is intercepted. This is done by registering the SIGINT [signal][Signals] with a handler function. The registration is done in the main program:
 
 ```python
-signal.signal(signal.SIGINT, handle_kb_interrupt)    
+signal.signal(signal.SIGINT, handle_kb_interrupt)
 ```
 
 The handler function `handle_kb_interrupt` must have two arguments, the signal and the frame, even though the second argument is not used:
@@ -114,7 +114,7 @@ def handle_kb_interrupt(sig, frame):
 
 if __name__ == '__main__':
     stop_event = threading.Event()
-    signal.signal(signal.SIGINT, handle_kb_interrupt)    
+    signal.signal(signal.SIGINT, handle_kb_interrupt)
     n_iter = 10
     thread = threading.Thread(target=do_some_work, args=(n_iter,))
     thread.start()
