@@ -2,7 +2,7 @@
 title: How to stop a Python thread cleanly
 date: 2021-07-06 00:00:00 +0100
 categories: [Python, concurrency, thread]
-tags: [python, threads]
+tags: [python, thread]
 ---
 
 Suppose a Python thread needs to be stopped cleanly (it might need to perform cleanup).

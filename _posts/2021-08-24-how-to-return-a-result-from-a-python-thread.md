@@ -2,7 +2,7 @@
 title: How to return a result from a Python thread
 date: 2021-08-24 00:00:00 +0100
 categories: [Python, thread, timeout]
-tags: [python, threads]
+tags: [python, thread]
 ---
 
 ## The problem
