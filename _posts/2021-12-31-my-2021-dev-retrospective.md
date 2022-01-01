@@ -5,7 +5,7 @@ categories: [Meta, career]
 tags: [meta, personal development]
 ---
 
-I'm working on improving my habits so I'll be writing annual yearly retrospectives... starting today! This is what 2021 brought about, professionally-wise:
+I'm working on improving my habits so I'll be writing yearly retrospectives... starting today! This is what 2021 brought about, professionally-wise:
 
 ![2021 dev retrospective](/assets/img/posts/2021_retrospective.png){: width="700"}
 
