@@ -26,7 +26,7 @@ I finally created my **LinkedIn profile** and started getting in touch with peop
 
 ## Career
 
-I have a **career plan**, yay! It's not that I didn't have one before; it's just that I realized I prefer *back-end engineering* to *embedded engineering*. More on the actual plan in the New Year's Dev Resolutions post.
+I have a **career plan**, yay! It's not that I didn't have one before; it's just that I realized I prefer *back-end engineering* to *embedded engineering*. More on the actual plan in the [New Year's Dev Resolutions post][2022].
 
 ## Work
 
@@ -48,6 +48,7 @@ I didn't have a proper learning plan for 2021 (which is something I intend to co
 It's been a good year. I grew a bit. I'll strive to do better in 2022. I still don't understand why I've waited so long to start writing yearly wrap-ups and to plan for the year ahead. Humans are weird, and I'm one of them. :smirk:
 
 <!-- links -->
+[2022]: {% post_url 2022-01-01-my-2022-dev-resolutions %}
 [OpenHTF]: https://github.com/google/openhtf
 [escape]: {% post_url 2021-01-28-learning-ue4-dungeon-prison-breakout %}
 [protobuf]: https://developers.google.com/protocol-buffers/docs/overview
