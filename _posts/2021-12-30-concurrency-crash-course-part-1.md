@@ -67,9 +67,9 @@ Concurrency is useful for two types of problems: I/O-bound and CPU-bound.
 
 ![I/O- vs CPU-bound problems](/assets/img/posts/io_cpu_bound.png){: width="700"}
 
-**I/O-bound problems** are affected by long input/output wait times. The resources involved may be files on a hard drive, peripheral devices, network requests, you name it. In the above diagram, red blocks show how much time is spent for I/O operations. When downloading files from the internet, for instance, an important speedup can be attained if we download concurrently instead of sequentially. The speedup comes from overlapping the I/O-bound wait times (the red blocks in the diagram). Therefore, **concurrency** can improve **I/O-bound problems** through **threads**.
+**I/O-bound problems** are affected by long input/output wait times. The resources involved may be files on a hard drive, peripheral devices, network requests, you name it. In the above diagram, red blocks show how much time is spent for I/O operations. When downloading files from the internet, for instance, an important speedup can be attained if we download concurrently instead of sequentially. The speedup comes from overlapping the I/O-bound wait times (the red blocks in the diagram). Therefore, **concurrency** (launching more **threads**) can improve **I/O-bound problems**.
 
-For **CPU-bound problems**, on the other hand, the limiting factor is the CPU speed. These are generally computational problems. If such programs can be decomposed into independent tasks (with the typical example being matrix multiplication), then a important speedup can be attained if we throw more CPUs at the problem. Therefore, **parallelism** can improve **CPU-bound problems** through **processes**.
+For **CPU-bound problems**, on the other hand, the limiting factor is the CPU speed. These are generally computational problems. If such programs can be decomposed into independent tasks (with the typical example being matrix multiplication), then an important speedup can be attained if we throw more CPUs at the problem. Therefore, **parallelism** (launching more **processes**) can improve **CPU-bound problems**.
 
 ## Challenges in concurrent programming
 
@@ -87,7 +87,7 @@ For example, suppose the shared state is the string `"wolf"`. We have two thread
 
 We can try to isolate race conditions using `sleep()` statements that will hopefully modify timing and execution order.
 
-Race conditions happen because access to the shared state happens outside of synchronization mechanisms. A possible mitigation strategy is to use barriers (see *Thread synchronization primitives* below).
+Race conditions occur because access to the shared state happens outside of synchronization mechanisms. A possible mitigation strategy is to use barriers (see the next post in the series on *Thread synchronization primitives*).
 
 ### Deadlock
 
@@ -120,7 +120,7 @@ This post takes a bird's eye view of concurrency by:
 * Taking a look at two classes of problems (I/O-bound and CPU-bound) and how they relate to concurrency
 * Explaining some common pitfalls in concurrent programming (race conditions, deadlock, livelocks, starvation and priority inversion)
 
-The next posts in this series will illustrate synchronization primitives (for threads and processes), list principles to keep in mind when designing concurrent programs, and explain how to evaluate parallel implementations.
+The next posts in this series will illustrate synchronization primitives (for threads and processes), list principles to keep in mind when designing concurrent programs, and show how to evaluate parallel implementations.
 
 ## Resources
 
