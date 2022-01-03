@@ -37,6 +37,8 @@ Therefore, in terms of resource sharing:
 * Threads (of a given process) share the same resources. Care must be taken as to how threads access those resources. Thread synchronization primitives such as condition variables, semaphores, mutexes or barriers allow to control the way in which threads access shared resources and will be discussed in a future post.
 * Processes do not share the same resources, by default. Process synchronization, also known as [Inter-Process Communication (IPC)][ipc], must be used if resource sharing is necessary. Some of the most common mechanisms for achieving IPC are signals, sockets, message queues, pipes and shared memory. IPC will be discussed in a future post.
 
+It is worthwhile to note that thread creation is *lightweight* in comparison to spawning a new process. This is an added benefit to the fact that threads have access to shared resources in the address space of their owner process.
+
 How are tasks executed with respect to one another? How are processes executed with respect to the CPUs? Here's where the next part comes in, where we discuss concurrency vs parallelism.
 
 ## Concurrency and parallelism
@@ -141,3 +143,4 @@ The next posts in this series will illustrate synchronization primitives (for th
 [linkedin]: https://www.linkedin.com/learning/python-parallel-and-concurrent-programming-part-2
 [prio-inv]: http://www.embeddedlinux.org.cn/rtconforembsys/5107final/LiB0101.html
 [mars]: https://medium.com/delta-force/the-case-of-mysterious-system-resets-on-mars-pathfinder-b01eab813b69
+
