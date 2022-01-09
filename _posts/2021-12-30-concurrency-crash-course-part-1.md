@@ -1,5 +1,5 @@
 ---
-title: Concurrency crash course (Part 1)
+title: Concurrency crash course. Part 1&#58; Terminology, usage and pitfalls
 date: 2021-12-30 00:00:00 +0100
 categories: [Computer science, concurrency]
 tags: [thread, process]
@@ -7,9 +7,10 @@ tags: [thread, process]
 
 This is a multi-part post:
 * Part 1 (this article) establishes terminology (tasks, threads and processes and how they relate to concurrency and parallelism) and gives an overview of challenges faced in concurrent programming.
-* Part 2 (TODO) explains some common thread synchronization primitives, accompanied by Python examples.
-* Part 3 (TODO) explains some common process synchronization primitives (inter-process communication mechanisms), accompanied by Python examples.
-* Part 4 (TODO) tackles parallel algorithm design and performance evaluation.
+* [Part 2][] shows what can go wrong when using threads without synchronization and explains the role and effects of the Global Interpreter Lock (GIL) in Python.
+* Part 3 (TODO) explains some common thread synchronization primitives, accompanied by Python examples.
+* Part 4 (TODO) explains some common process synchronization primitives (inter-process communication mechanisms), accompanied by Python examples.
+* Part 5 (TODO) tackles parallel algorithm design and performance evaluation.
 
 I'm writing this for my frustrated past self, who couldn't wrap her head around these concepts. Moreover, my future self will likely benefit as well (I'm inferring this by extrapolating my current self's goldfish-grade memory). And last but not least, I'm also writing this post for anybody out there still struggling. :hugs:
 
@@ -135,6 +136,7 @@ The next posts in this series will illustrate synchronization primitives (for th
 * [Priority inversion][prio-inv]
 
 <!-- links -->
+[Part 2]: {% post_url 2022-01-09-concurrency-crash-course-part-2 %}
 [jenkov]: http://tutorials.jenkov.com/java-concurrency/concurrency-vs-parallelism.html
 [pike-slides]: https://go.dev/talks/2012/waza.slide
 [pike-talk]: https://www.youtube.com/watch?v=oV9rvDllKEg
