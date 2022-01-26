@@ -4,7 +4,7 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-![Oh hai!](/assets/img/site/oh_hai.jpg)
+<a href="https://imgflip.com/i/m21vm"><img src="https://i.imgflip.com/m21vm.jpg" title="made at imgflip.com"/></a>
 
 ## Who am I?
 
