@@ -10,7 +10,7 @@ order: 4
 
 Hi there! I'm a software engineer currently working in embedded systems. I hold a PhD degree in computer science. During my PhD I was a teaching assistant for first year Masters' students and found the whole experience very exciting. I'm passionate about problem solving and I view software development as craftsmanship. 
 
-You can check out my [GitHub][] profile and my [resume](https://alexandra-zaharia.org){:target="_blank"} or you can connect with me on [LinkedIn][].
+You can check out my [resume](https://alexandra-zaharia.org){:target="_blank"} and you can also find me on [GitHub][] and [LinkedIn][].
 
 Outside of work I enjoy weightlifting and scuba diving <s>staying at home (COVID-19 edition)</s>, (my) cats, single player RPGs, sci-fi, coloring and many more. I love learning stuff, such as Spanish or drawing, and taking [scuba diving photos](https://www.ivresse-des-profondeurs.com/){:target="_blank"}.
 
