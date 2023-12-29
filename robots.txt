@@ -1,0 +1,5 @@
+User-agent: *
+
+Disallow: /norobots/
+
+Sitemap: https://alexandra-zaharia.github.io/sitemap.xml
